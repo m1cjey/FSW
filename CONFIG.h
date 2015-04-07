@@ -53,6 +53,7 @@ class mpsconfig
 	double wlength;//左右の壁の距離。流体の何倍か
 	double height;//流体の重心高さ
 	double tool_angle;//FSWにおいて、ツールを傾ける角度
+	int tool_type;
 	int airwall;
 	
 	///////粒子法用パラメータ
@@ -244,7 +245,6 @@ class mpsconfig
 	double threshold;	//アダプティブにする際の、圧力誤差の閾値
 	int    fix_surface;
 	
-	double rpm;
 	int    model_number;
 	int    model_set_way;		//modelをセットする方法　0=正方格子 1=MD
 	int    model_inherit;		//前の解析で使った粒子モデルを引き継ぐ
@@ -320,7 +320,7 @@ class mpsconfig
 	double get_wlength()    {return wlength;}
 	double get_height()	{return height;}
 	double get_tool_angle() {return tool_angle;}
-	double get_rpm() {return rpm;}
+	int    get_tool_type() {return tool_type;}
 	int    get_airwall() {return airwall;}
 	
 	double get_re()		{return re;}

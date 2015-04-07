@@ -32,12 +32,15 @@ void set_rectangular_edge(vector<double> &X,vector<double> &Y,vector<double> &Z,
 void set_rectangular_in(vector<double> &X,vector<double> &Y,vector<double> &Z,int *number,double le,double Len_H,double Len_V,int edge_startID,int edge_lastID);
 //円柱表面作成関数
 void set_cylinder_face(vector<double> &X,vector<double> &Y,vector<double> &Z,int *number,double le,double R,double height,int circle_start_id,int circle_end_id,int top_flag);
+//円錐表面作成関数
+void set_circular_cone_face(vector<double> &X,vector<double> &Y,vector<double> &Z,int *number,double le,double R,double R2,double height,int circle_start_id,int circle_end_id,int top_flag);
 //円柱内部設置関数
 void set_cylinder_in(vector<double> &X,vector<double> &Y,vector<double> &Z,int *number,double le,double R,double height,int flag);
 //ドーナツ作成
 void set_doughnut2D(vector<double> &X,vector<double> &Y,vector<double> &Z,int *number,double le,double R_big,double R_smal,int edge_startID,int edge_lastID);
 //FSWプローブ内部粒子セット関数
 void set_hat_in(vector<double> &X,vector<double> &Y,vector<double> &Z,int *number,double le,double R_smal,double R_big,double H_hat,double H_flange,int bound_startID,int bound_endID);
+void set_hat_in_2(vector<double> &X,vector<double> &Y,vector<double> &Z,int *number,double le,double R_smal,double R_mid,double R_big,double H_hat,double H_flange,int bound_startID,int bound_endID);
 //箱作成関数
 void set_box(vector<double> &X,vector<double> &Y,vector<double> &Z,vector<int> &surface,int *number,double le,double Width,double Height,double Depth);
 //BOX内作成関数
@@ -961,10 +964,13 @@ void set_initial_placement_using_MD(mpsconfig *CON,int *particle_number)
 	else if(model==19)//19 FSW
 	{
 		double probe_R=2.5*1e-3;	//プローブ半径  //CON->get_fluidwidth()*le;
+		double probe_R_2=1.0*1e-3;	//プローブ半径(円錐形状の下部)  tool_type=1のときに利用;
 		double shold_R=6*1e-3;	//ショルダー半径
 		double height=4*1e-3;	//プローブ高さ //6*le*A;
+		if(CON->get_tool_type()==2) height=3*1e-3+B*le;//表裏ツールの場合、ツールの長さ*2が流体領域の厚みと同じにならないといけない
+
 		double shold_height=10*B*le;
-		double rpm=CON->get_rpm();//ツール回転速度
+		double rpm=500;//ツール回転速度
 		double rps=rpm/60;
 		double w=rps*2*PI;		//角速度
 		double U=CON->get_move_speed();//プローブの移動速度[m/sec]		
@@ -986,16 +992,32 @@ void set_initial_placement_using_MD(mpsconfig *CON,int *particle_number)
 		if(Dim==3)
 		{
 			///プローブ底面作成
-			set_circle_edge(X,Y,Z,&number,le,probe_R);//円外周
-			set_circle_in_using_6_pieces(X,Y,Z,&number,le,probe_R,0,number);//円内部    vector配列は参照渡ししている
+			if(CON->get_tool_type()==0 ||CON->get_tool_type()==2)
+			{
+				set_circle_edge(X,Y,Z,&number,le,probe_R);//円外周
+				set_circle_in_using_6_pieces(X,Y,Z,&number,le,probe_R,0,number);//円内部    vector配列は参照渡ししている
+			}
+			if(CON->get_tool_type()==1)//円錐ツール
+			{
+				set_circle_edge(X,Y,Z,&number,le,probe_R_2);//円外周
+				set_circle_in_using_6_pieces(X,Y,Z,&number,le,probe_R_2,0,number);//円内部    vector配列は参照渡ししている
+			}
 			int circle_start_id=0;
 			int circle_end_id=number;
 			int circle_num=number;		//円周に配置された粒子数
 			////////
-
-			//プローブ側面作成
 			int top_flag=OFF;		//円柱の上面は作成しなくていいからフラグをOFF 
-			set_cylinder_face(X,Y,Z,&number,le,probe_R,height,circle_start_id,circle_end_id,top_flag);//円柱表面作成
+			//プローブ側面作成
+			if(CON->get_tool_type()==0 ||CON->get_tool_type()==2)
+			{
+				top_flag=OFF;		//円柱の上面は作成しなくていいからフラグをOFF 
+				set_cylinder_face(X,Y,Z,&number,le,probe_R,height,circle_start_id,circle_end_id,top_flag);//円柱表面作成
+			}
+			if(CON->get_tool_type()==1)
+			{
+				top_flag=OFF;		//円柱の上面は作成しなくていいからフラグをOFF 
+				set_circular_cone_face(X,Y,Z,&number,le,probe_R,probe_R_2,height,circle_start_id,circle_end_id,top_flag);//円柱表面作成
+			}
 
 			//ショルダー底面作成
 			beforeN=number;
@@ -1022,9 +1044,32 @@ void set_initial_placement_using_MD(mpsconfig *CON,int *particle_number)
 
 			//内部作成
 			beforeN=number;
-			set_hat_in(X,Y,Z,&number,le,probe_R,shold_R,height,shold_height,0,number);
+			if(CON->get_tool_type()==0 ||CON->get_tool_type()==2) set_hat_in(X,Y,Z,&number,le,probe_R,shold_R,height,shold_height,0,number);
+			if(CON->get_tool_type()==1) set_hat_in_2(X,Y,Z,&number,le,probe_R_2,probe_R,shold_R,height,shold_height,0,number);
+
 			for(int i=beforeN;i<number;i++) type1.push_back(OUTWALL);//ここまでの粒子はすべてOUTWALL
 			
+			beforeN=number;
+
+			if(CON->get_tool_type()==2)///
+			{
+				for(int i=0;i<beforeN;i++)
+				{
+					if(Z[i]!=0)//Z=0面が裏表コピーの境界面
+					{
+						X.push_back(X[i]);
+						Y.push_back(Y[i]);
+						Z.push_back(-Z[i]);
+						type1.push_back(type1[i]);
+						number++;
+					}
+					double r=sqrt(X[i]*X[i]+Y[i]*Y[i]);
+					if(Z[i]==0 && r<probe_R-0.1*le)//境界面の外周部以外
+					{
+						type1[i]=OUTWALL;
+					}
+				}
+			}
 			
 			double max_dis_z=0.0;
 			if(CON->get_tool_angle()>0)//ツールをx軸まわりに回転させる。進行方向が+y
@@ -1049,7 +1094,7 @@ void set_initial_placement_using_MD(mpsconfig *CON,int *particle_number)
 				}		
 			}
 
-			for(int i=0;i<number;i++) Z[i]+=2*1e-3;//重心を移動
+			if(CON->get_tool_type()!=2) for(int i=0;i<number;i++) Z[i]+=2*1e-3;//重心を移動
 
 			if(CON->get_tool_angle()>0) 
 			{
@@ -1073,6 +1118,8 @@ void set_initial_placement_using_MD(mpsconfig *CON,int *particle_number)
 			double width0=18*1e-3;//25*1e-3;//18*1e-3;//流体が占める幅
 			double Width=width0+6*le;		//横18mm+壁粒子を左右に4粒子分
 			double Height=6*1e-3+4*le*B;	//高さ6mm+壁粒子を下に4粒子分
+			if(CON->get_tool_type()==2) Height=6*1e-3;	//表裏ツールの場合、下側の壁を取り払っているので壁粒子の設定の関係で下側に追加する必要がない
+
 			double Depth=30*1e-3+6*le*A;//27*1e-3+6*le*A;	//奥行き27mm+壁粒子を左右に4粒子分
 			double depth0=9e-3;				//ツール中心と、手前の壁との距離
 			int BOX_startID=0;				//set_box()開始前の粒子数
@@ -1087,6 +1134,7 @@ void set_initial_placement_using_MD(mpsconfig *CON,int *particle_number)
 				X2[i]-=width0*0.5+3*le;		//重心移動
 				Y2[i]-=depth0+3*le*A;
 				Z2[i]-=4*le*B+Z_mod;
+				if(CON->get_tool_type()==2) Z2[i]+=4*le*B+Z_mod-0.5*Height;
 				//Z2[i]-=4*le*B+le;//もう1粒子分下げて、ショルダーが流体部分をえぐらないようにする// Bをかけて1層分だと接触しすぎ？
 			}/////////////////////////////////////////
 			
@@ -1099,51 +1147,97 @@ void set_initial_placement_using_MD(mpsconfig *CON,int *particle_number)
 
 			for(int i=beforeN;i<number;i++) type1.push_back(FRFLUID);//まずはとりあえずFRFLUIDを代入
 
-			Width-=6*le;
-			Height-=4*le*B;
-			Depth-=6*le*A;
-			for(int i=beforeN;i<number;i++)
-			{
-				if(X[i]>(Width*0.5)+0.2*le)//右の壁
-				{
-					if(X[i]<(Width*0.5)+1.2*le && Z[i]>-1.2*le-Z_mod) type1[i]=INWALL;
-					else type1[i]=OUTWALL;	
-				}
-				else if(X[i]<-(Width*0.5)-0.2*le)//左の壁
-				{
-					if(X[i]>-(Width*0.5)-1.2*le && Z[i]>-1.2*le-Z_mod) type1[i]=INWALL;
-					else type1[i]=OUTWALL;	
-				}
-				
-				if(Y[i]<-(depth0)-0.2*le)//手前の壁
-				{
-					//if(Y[i]>-(depth0)-1.2*le && Z[i]>-1.2*le-Z_mod) type1[i]=INWALL;
-					if(Y[i]>-(depth0)-1.2*le && Z[i]>-1.2*le-Z_mod) 	
-					{
-						if(X[i]>-(Width*0.5)-0.2*le && X[i]<(Width*0.5)+0.2*le) type1[i]=INWALL;
-					}
-					else type1[i]=OUTWALL;
-				}
-				else if(Y[i]>(Depth-depth0)+0.2*le)//奥の壁
-				{
-					//if(Y[i]<(Depth-depth0)+1.2*le && Z[i]>-1.2*le-Z_mod) type1[i]=INWALL;
-					if(Y[i]<(Depth-depth0)+1.2*le && Z[i]>-1.2*le-Z_mod)
-					{
-						if(X[i]>-(Width*0.5)-0.2*le && X[i]<(Width*0.5)+0.2*le) type1[i]=INWALL;// このifがないと、既に左右でoutwallと判断されている一部がinwallになってしまう
-					}
-					else type1[i]=OUTWALL;
-				}
 
-				if(X[i]<=(Width*0.5)+0.2*le && X[i]>=-(Width*0.5)-0.2*le)
+			if(CON->get_tool_type()==0 ||CON->get_tool_type()==1)
+			{
+				Width-=6*le;
+				Height-=4*le*B;
+				Depth-=6*le*A;
+				for(int i=beforeN;i<number;i++)
 				{
-					if(Y[i]>=-(depth0)-0.2*le && Y[i]<=(Depth-depth0)+0.2*le)
+					if(X[i]>(Width*0.5)+0.2*le)//右の壁
 					{
-						if(Z[i]<-0.2*le-Z_mod)
+						if(X[i]<(Width*0.5)+1.2*le && Z[i]>-1.2*le-Z_mod) type1[i]=INWALL;
+						else type1[i]=OUTWALL;	
+					}
+					else if(X[i]<-(Width*0.5)-0.2*le)//左の壁
+					{
+						if(X[i]>-(Width*0.5)-1.2*le && Z[i]>-1.2*le-Z_mod) type1[i]=INWALL;
+						else type1[i]=OUTWALL;	
+					}
+				
+					if(Y[i]<-(depth0)-0.2*le)//手前の壁
+					{
+						//if(Y[i]>-(depth0)-1.2*le && Z[i]>-1.2*le-Z_mod) type1[i]=INWALL;
+						if(Y[i]>-(depth0)-1.2*le && Z[i]>-1.2*le-Z_mod) 	
 						{
-							if(Z[i]>-1.2*le-Z_mod) type1[i]=INWALL;//下の壁
-							else type1[i]=OUTWALL;
+							if(X[i]>-(Width*0.5)-0.2*le && X[i]<(Width*0.5)+0.2*le) type1[i]=INWALL;
+						}
+						else type1[i]=OUTWALL;
+					}
+					else if(Y[i]>(Depth-depth0)+0.2*le)//奥の壁
+					{
+						//if(Y[i]<(Depth-depth0)+1.2*le && Z[i]>-1.2*le-Z_mod) type1[i]=INWALL;
+						if(Y[i]<(Depth-depth0)+1.2*le && Z[i]>-1.2*le-Z_mod)
+						{
+							if(X[i]>-(Width*0.5)-0.2*le && X[i]<(Width*0.5)+0.2*le) type1[i]=INWALL;// このifがないと、既に左右でoutwallと判断されている一部がinwallになってしまう
+						}
+						else type1[i]=OUTWALL;
+					}
+
+					if(CON->get_tool_type()==0 || CON->get_tool_type()==1)
+					{
+						if(X[i]<=(Width*0.5)+0.2*le && X[i]>=-(Width*0.5)-0.2*le)
+						{
+							if(Y[i]>=-(depth0)-0.2*le && Y[i]<=(Depth-depth0)+0.2*le)
+							{
+								if(Z[i]<-0.2*le-Z_mod)
+								{
+									if(Z[i]>-1.2*le-Z_mod) type1[i]=INWALL;//下の壁
+									else type1[i]=OUTWALL;
+								}
+							}
 						}
 					}
+				}
+			}
+			if(CON->get_tool_type()==2)//表裏ツール
+			{
+				Width-=6*le;
+				//Height-=4*le*B;
+				Depth-=6*le*A;
+				for(int i=beforeN;i<number;i++)
+				{
+					if(X[i]>(Width*0.5)+0.2*le)//右の壁
+					{
+						if(X[i]<(Width*0.5)+1.2*le) type1[i]=INWALL;
+						else type1[i]=OUTWALL;	
+					}
+					else if(X[i]<-(Width*0.5)-0.2*le)//左の壁
+					{
+						if(X[i]>-(Width*0.5)-1.2*le) type1[i]=INWALL;
+						else type1[i]=OUTWALL;	
+					}
+				
+					if(Y[i]<-(depth0)-0.2*le)//手前の壁
+					{
+						//if(Y[i]>-(depth0)-1.2*le && Z[i]>-1.2*le-Z_mod) type1[i]=INWALL;
+						if(Y[i]>-(depth0)-1.2*le) 	
+						{
+							if(X[i]>-(Width*0.5)-0.2*le && X[i]<(Width*0.5)+0.2*le) type1[i]=INWALL;
+						}
+						else type1[i]=OUTWALL;
+					}
+					else if(Y[i]>(Depth-depth0)+0.2*le)//奥の壁
+					{
+						//if(Y[i]<(Depth-depth0)+1.2*le && Z[i]>-1.2*le-Z_mod) type1[i]=INWALL;
+						if(Y[i]<(Depth-depth0)+1.2*le)
+						{
+							if(X[i]>-(Width*0.5)-0.2*le && X[i]<(Width*0.5)+0.2*le) type1[i]=INWALL;// このifがないと、既に左右でoutwallと判断されている一部がinwallになってしまう
+						}
+						else type1[i]=OUTWALL;
+					}
+					////下側の壁は必要ない
 				}
 			}
 			//////////////////////*/
@@ -1190,56 +1284,114 @@ void set_initial_placement_using_MD(mpsconfig *CON,int *particle_number)
 			//ツール部分の速度条件を与えた上で出力
 			if(CON->get_tool_angle()==0)//ツールを回転させない場合
 			{
-
-				for(int i=0;i<number;i++)
+				if(CON->get_tool_type()==0 || CON->get_tool_type()==1)
 				{
-					if(type1[i]==INWALL)
+					for(int i=0;i<number;i++)
 					{
-						double speed=0;
-						double u=0;
-						double v=0;
-						double uw=0;
-						double r=sqrt(X[i]*X[i]+Y[i]*Y[i]);//ツールの中心が原点でないときは注意
-						int AA=1;
-						if(r>0.1*le && r<=shold_R+le && Z[i]>0)
+					
+						if(type1[i]==INWALL)
 						{
-							speed=r*w;
-							u=speed*(-Y[i]/r);
-							v=speed*(X[i]/r);
-							if(Z[i]<Height && r>probe_R-0.3*le) uw=-pich*rps;//INWALLのうち、プローブの側面のみ(底面は除く)に下方向速度追加
-							if(calc_type==traverse) v+=U;//y方向にツールを移動
-							if(calc_type==plunge) uw-=U;//Z方向にツールを移動(plange phase)
+							double speed=0;
+							double u=0;
+							double v=0;
+							double uw=0;
+							double r=sqrt(X[i]*X[i]+Y[i]*Y[i]);//ツールの中心が原点でないときは注意
+							int AA=1;
+							if(r>0.1*le && r<=shold_R+le && Z[i]>0)
+							{
+								speed=r*w;
+								u=speed*(-Y[i]/r);
+								v=speed*(X[i]/r);
+								if(Z[i]<Height && r>probe_R-0.3*le) uw=-pich*rps;//INWALLのうち、プローブの側面のみ(底面は除く)に下方向速度追加
+								if(calc_type==traverse) v+=U;//y方向にツールを移動
+								if(calc_type==plunge) uw-=U;//Z方向にツールを移動(plange phase)
+							}
+							if(r<=shold_R+le && Z[i]>0) AA=MOVE;
+							materialID=1;		
+							writedata2(fq, count2, X[i],Y[i],Z[i], INWALL,materialID,OFF,0, u,v,uw,0,wall_h,AA);
+							count2++;
 						}
-						if(r<=shold_R+le && Z[i]>0) AA=MOVE;
-						materialID=1;		
-						writedata2(fq, count2, X[i],Y[i],Z[i], INWALL,materialID,OFF,0, u,v,uw,0,wall_h,AA);
-						count2++;
+					}
+					for(int i=0;i<number;i++)
+					{
+						if(type1[i]==OUTWALL)
+						{
+							double speed=0;
+							double u=0;
+							double v=0;
+							double uw=0;
+							double r=sqrt(X[i]*X[i]+Y[i]*Y[i]);//ツールの中心が原点でないときは注意
+							int AA=1;
+							if(r>0.1*le && r<=shold_R+le && Z[i]>0)
+							{
+								speed=r*w;
+								u=speed*(-Y[i]/r);
+								v=speed*(X[i]/r);
+								uw=-pich*rps;
+								if(calc_type==traverse) v+=U;//y方向にツールを移動
+								else if(calc_type==plunge) uw-=U;//Z方向にツールを移動(plange phase)
+							}
+							if(r<=shold_R+le && Z[i]>0) AA=MOVE;
+							materialID=1;
+							writedata2(fq, count2, X[i],Y[i],Z[i], OUTWALL,materialID,OFF,0, u,v,uw,0,wall_h,AA);
+
+							count2++;
+						}
 					}
 				}
-				for(int i=0;i<number;i++)
+				else if(CON->get_tool_type()==2)
 				{
-					if(type1[i]==OUTWALL)
+					for(int i=0;i<number;i++)
 					{
-						double speed=0;
-						double u=0;
-						double v=0;
-						double uw=0;
-						double r=sqrt(X[i]*X[i]+Y[i]*Y[i]);//ツールの中心が原点でないときは注意
-						int AA=1;
-						if(r>0.1*le && r<=shold_R+le && Z[i]>0)
+					
+						if(type1[i]==INWALL)
 						{
-							speed=r*w;
-							u=speed*(-Y[i]/r);
-							v=speed*(X[i]/r);
-							uw=-pich*rps;
-							if(calc_type==traverse) v+=U;//y方向にツールを移動
-							else if(calc_type==plunge) uw-=U;//Z方向にツールを移動(plange phase)
+							double speed=0;
+							double u=0;
+							double v=0;
+							double uw=0;
+							double r=sqrt(X[i]*X[i]+Y[i]*Y[i]);//ツールの中心が原点でないときは注意
+							int AA=1;
+							if(r>0.1*le && r<=shold_R+le)
+							{
+								speed=r*w;
+								u=speed*(-Y[i]/r);
+								v=speed*(X[i]/r);
+								//if(Z[i]<Height && r>probe_R-0.3*le) uw=-pich*rps;//INWALLのうち、プローブの側面のみ(底面は除く)に下方向速度追加
+								if(calc_type==traverse) v+=U;//y方向にツールを移動
+								if(calc_type==plunge) uw-=U;//Z方向にツールを移動(plange phase)
+							}
+							if(r<=shold_R+le) AA=MOVE;
+							materialID=1;		
+							writedata2(fq, count2, X[i],Y[i],Z[i], INWALL,materialID,OFF,0, u,v,uw,0,wall_h,AA);
+							count2++;
 						}
-						if(r<=shold_R+le && Z[i]>0) AA=MOVE;
-						materialID=1;
-						writedata2(fq, count2, X[i],Y[i],Z[i], OUTWALL,materialID,OFF,0, u,v,uw,0,wall_h,AA);
+					}
+					for(int i=0;i<number;i++)
+					{
+						if(type1[i]==OUTWALL)
+						{
+							double speed=0;
+							double u=0;
+							double v=0;
+							double uw=0;
+							double r=sqrt(X[i]*X[i]+Y[i]*Y[i]);//ツールの中心が原点でないときは注意
+							int AA=1;
+							if(r>0.1*le && r<=shold_R+le)
+							{
+								speed=r*w;
+								u=speed*(-Y[i]/r);
+								v=speed*(X[i]/r);
+								uw=-pich*rps;
+								if(calc_type==traverse) v+=U;//y方向にツールを移動
+								else if(calc_type==plunge) uw-=U;//Z方向にツールを移動(plange phase)
+							}
+							if(r<=shold_R+le) AA=MOVE;
+							materialID=1;
+							writedata2(fq, count2, X[i],Y[i],Z[i], OUTWALL,materialID,OFF,0, u,v,uw,0,wall_h,AA);
 
-						count2++;
+							count2++;
+						}
 					}
 				}
 			}
@@ -2637,6 +2789,105 @@ void set_cylinder_face(vector<double> &X,vector<double> &Y,vector<double> &Z,int
 
 }
 
+//円錐表面作成関数
+void set_circular_cone_face(vector<double> &X,vector<double> &Y,vector<double> &Z,int *number,double le,double R,double R2,double height,int circle_start_id,int circle_end_id,int top_flag)
+{
+	//上部半径R,下部半径R2,高さheightの円錐の面を作成する。ただしこの関数呼び出し時において、すでに下面の円(Z=0)は作成済みとする
+	//top_flag=ONなら円柱上面を作成する。OFFならしないが、側面だけは作成する。
+	int beforeN=*number;
+	int newN=0;
+
+	int Nv;				//水直の分割数
+	double dL_V;		//水直の分割長さ
+	double A=sqrt(3.0)/2;		//よく使う係数
+	calc_N_and_L(height,le*A,&Nv,&dL_V);
+
+	
+
+	double gap=0.4*le;				//辺ぎりぎりに内部粒子を配置しないよう、隙間を設ける
+
+	///////////////////////////////////側面
+	
+	for(int j=1;j<=Nv;j++)//j=0,j=Nvは下面、上面に該当するのでここではぬかす
+	{
+		double jj=j*dL_V;
+		double r=jj*(R-R2)/height + R2;
+		int Nr=calc_division_N_circle(2*PI*r,le);//円周の分割数
+		double Lr=2*PI*r/Nr;				//円周分割距離
+
+		for(int i=0;i<Nr;i++)
+		{
+			
+			double ii=i*Lr;
+			if(j%2!=0) ii+=0.5*Lr;//jが奇数ならiiを0.5格子だけずらす
+			if(ii<2*PI*R-gap)
+			{
+				if(jj<height-gap)	
+				{
+					
+					double theta=2*PI*(ii/(2*PI*r));
+					X.push_back(r*cos(theta));
+					Y.push_back(r*sin(theta));
+					Z.push_back(jj);
+					newN++;
+				}
+			}
+		}
+	}
+	*number=*number+newN;
+	////////////////////////
+
+
+	//上面作成
+	beforeN=*number;
+	newN=0;
+	
+		//if(top_flag==ON)
+		//{
+		//	for(int i=circle_start_id;i<circle_end_id;i++)
+		//	{
+		//		X.push_back(X[i]);
+		//		Y.push_back(Y[i]);
+		//		Z.push_back(height);
+		//		newN++;
+		//	}
+		//}
+		//if(top_flag==HALF)//内壁部より内側はなし
+		//{
+		//	for(int i=circle_start_id;i<circle_end_id;i++)
+		//	{
+		//		double r=sqrt(X[i]*X[i]+Y[i]*Y[i]);
+		//		if(r>R && r<R+4*le-0.1*le)//外周のみ作成
+		//		{
+		//		X.push_back(X[i]);
+		//		Y.push_back(Y[i]);
+		//		Z.push_back(height);
+		//		newN++;
+		//		}
+		//	}
+		//}
+		//else if(top_flag==OFF)//上面が必要ないなら
+		//{
+		//	for(int i=circle_start_id;i<circle_end_id;i++)
+		//	{
+		//		double r=sqrt(X[i]*X[i]+Y[i]*Y[i]);
+		//		if(r>R-0.1*le)//外周のみ作成
+		//		{
+		//			X.push_back(X[i]);
+		//			Y.push_back(Y[i]);
+		//			Z.push_back(height);
+		//			newN++;
+		//		}
+		//	}
+		//}
+	
+	
+	*number=*number+newN;
+	
+	/////////////////////////////
+
+}
+
 //円柱内部設置関数
 void set_cylinder_in(vector<double> &X,vector<double> &Y,vector<double> &Z,int *number,double le,double R,double height,int flag)
 {
@@ -2845,6 +3096,83 @@ void set_hat_in(vector<double> &X,vector<double> &Y,vector<double> &Z,int *numbe
 				if(kk<=H_hat+gap)
 				{
 					if(ii*ii+jj*jj<R_smal2*R_smal2)
+					{
+						X.push_back(ii);
+						Y.push_back(jj);
+						Z.push_back(kk);
+						newN++;
+					}
+				}
+				else if(kk<height-gap)
+				{
+					if(ii*ii+jj*jj<R_big2*R_big2)
+					{
+						X.push_back(ii);
+						Y.push_back(jj);
+						Z.push_back(kk);
+						newN++;
+					}
+				}
+			}
+		}
+	}///////////////////////*/
+
+	//分子動力学により位置を最適化
+	double r=1.5;
+	double rigion[3][2];	//解析領域
+	rigion[A_X][0]=-1.2*R_big; rigion[A_X][1]=1.2*R_big;
+	rigion[A_Y][0]=-1.2*R_big; rigion[A_Y][1]=1.2*R_big;
+	rigion[A_Z][0]=-5*le;  rigion[A_Z][1]=height*1.5;
+
+	MD_3D(X,Y,Z,le,bound_startID,bound_endID,beforeN,newN,r,rigion);
+
+	*number=*number+newN;
+
+}
+
+//FSWプローブ内部粒子セット関数
+void set_hat_in_2(vector<double> &X,vector<double> &Y,vector<double> &Z,int *number,double le,double R_smal,double R_mid,double R_big,double H_hat,double H_flange,int bound_startID,int bound_endID)
+{
+	//帽子型の物質内部を作成する。例えばFSWのツール形状。
+	
+	//帽子のてっぺんに該当する半径をR_smal,かぶる部分に該当する半径をR_mid,つばに該当する半径をR_big,つばの幅をH_flange,頭の幅をH_hat
+	//ここで作成する帽子型の姿勢は、FSWのツールと同じで、頭を下にしてつばが上。
+	//プローブ底辺のZ=0とする
+
+	int newN=0;					//個の関数で新しく追加する粒子数
+	int beforeN=*number;		//この関数呼び出し時における粒子数
+
+	double A=sqrt(3.0)/2;				//よく使う係数
+	double B=sqrt(2.0/3);						////よく使う係数
+	double height=H_hat+H_flange;
+
+	int WX=(int)(R_big/le)+1;		 //球を十分含む四角形を想定する。その四角形の幅*0.5
+	int WY=(int)(R_big/(le*A))+1;  //球を十分含む正四角形を想定する。その四角形の幅*0.5
+	int WZ=(int)(height/(le*B))+1;  //球を十分含む正四角形を想定する。その四角形の幅*0.5
+	double gap=0.4*le;					//隙間
+	double R_big2=R_big-gap;				//少し小さめの半径を設定
+	double R_mid2=R_mid-gap;				//少し小さめの半径を設定
+	double R_smal2=R_smal-gap;				//少し小さめの半径を設定
+	double height2=height-0.3*le;				//少し小さめの高さを設定
+	
+
+	//内部初期位置
+	for(int i=-WX;i<=WX;i++)
+	{
+		for(int j=-WY;j<=WY;j++)
+		{
+			for(int k=1;k<=WZ;k++)
+			{
+				double ii=i*le;
+				double jj=j*le*A;
+				double kk=k*le*B;
+				if(j%2!=0) ii+=0.5*le;//jが奇数ならiiを0.5格子だけずらす
+				if(k%2!=0) {ii+=0.5*le; jj+=sqrt(3.0)/6*le;}//kが奇数ならiiとjjをずらす
+				if(kk<=H_hat+gap)
+				{
+					double r=kk*(R_mid2-R_smal2)/H_hat + R_smal2;
+					if(ii*ii+jj*jj<r*r)
+					//if(ii*ii+jj*jj<R_smal2*R_smal2) double r=jj*(R-R2)/height + R2;
 					{
 						X.push_back(ii);
 						Y.push_back(jj);

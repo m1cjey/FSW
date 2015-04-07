@@ -7,15 +7,15 @@ mpsconfig::mpsconfig()
 {
 	///////解析条件
 	dt=1.0e-4;//0.0001;//0.000025*4;//////0.000025*10;//0.0005;//0.000025/2;//0.0000125    //jw法の場合、コイル周期の整数倍にすること         
-	step=10000;
+	step=1;
 	dimention=3; 
 	
-	maxX=0.1;//0.1;//0.01;
-	minX=-0.1;//-0.1;//-0.01;
-	maxY=0.1;////0.1;//0.01;             //indexの関係上、Z方向には余裕をもつこと。
-	minY=-0.1;//-0.1;//-0.01;
-	maxZ=0.1;////0.1;//0.3;//0.01;
-	minZ=-0.1;//-0.1;//-0.01;
+	maxX=0.02;//0.1;//0.01;
+	minX=-0.02;//-0.1;//-0.01;
+	maxY=0.03;////0.1;//0.01;             //indexの関係上、Z方向には余裕をもつこと。
+	minY=-0.02;//-0.1;//-0.01;
+	maxZ=0.02;////0.1;//0.3;//0.01;
+	minZ=-0.01;//-0.1;//-0.01;
 
 	material=FSWA1;//Fe,Al,H2Oは流体。FSWA1は固体のA1100
 
@@ -91,6 +91,8 @@ mpsconfig::mpsconfig()
 	distancebp=0.0005;//0.001;//0.0015;//0.002;//0.001;//0.0005
 	wlength=2;
 	height=-0.004;//-0.004;//0.06;//0.102;//0.18;//0.005;    
+	tool_angle=0;//FSWにおいて、ツールを傾ける角度(弧度)
+	tool_type=0;//FSWにおける、ツール形状0:デフォルト(円柱)　1:円錐 2:円柱裏表
 	airwall=OFF;//IH釜において、流体上部に壁を配置するかどうか
 
 	///////粒子法用パラメータ
@@ -103,7 +105,7 @@ mpsconfig::mpsconfig()
     times=2e-8;//50;
 	
 	////////表面張力関係                                      
-	surface_tension=1;      //0=OFF 1=形状 2=粒子間ポテンシャル
+	surface_tension=0;      //0=OFF 1=形状 2=粒子間ポテンシャル
 	smooth=OFF;				//ｽﾑｰｼﾞﾝｸﾞ　1=ON 0=OFF
 	SFT=0;//0;					//1=ON 0=OFF 表面張力(surface tension)の温度(T)依存性スイッチ
 	smn=0;					//表面張力のｽﾑｰｼﾞﾝｸﾞの回数
@@ -150,9 +152,9 @@ mpsconfig::mpsconfig()
 	temperature_depend=OFF;		//物性値が温度に依存して変化するかどうか アルミニウム、水のみ対応
 	insulate=1;             //壁との断熱状態 0=断熱　1=非断熱 2=局所的に断熱、どこが断熱なのかはソースを確認のこと
 	T_laplacian=0;          //温度のﾗﾌﾟﾗｼｱﾝ。　0=教科書　1=λ[i] 2=発散・勾配
-	wall_density=7850;//2700;//8940;//7850;		//壁の密度[kg/m^3]
-	wall_Cp=460;//880;//385;//460;			//壁の比熱[J/(kg・K)]
-	wall_k=24;//24;//394;//24;				//壁の熱伝導率[W/(m・K)]
+	wall_density=2700;//8940;//7850;		//壁の密度[kg/m^3]
+	wall_Cp=880;//385;//460;			//壁の比熱[J/(kg・K)]
+	wall_k=236;//24;//394;//24;				//壁の熱伝導率[W/(m・K)]
 	
 	roomT=293;				//室温(20℃) int型でよい
 	initialT=293;//MP+10;	//293;		//初期温度
@@ -268,7 +270,7 @@ mpsconfig::mpsconfig()
 	surface_judge2=ON;		//surface_judge2()を使用するかしないか  1=ON 0=OFF
 	move_prtcl=ON;			//移動粒子を考慮するかしないか 1=ON 0=OFF
 	move_u_dirct=2;//-3;//2;			//移動粒子を移動する方向　現在は±X方向=±1,±Y方向=±2,±Z方向=±3
-	move_speed=(8.333*550/500)*1e-3;//1.5e-3;//1.5e-3;//1e-3;//8.333*1e-3;//12.5*1e-3;	//移動粒子の移動速度[m/s]
+	move_speed=8.333*1e-3;//1.5e-3;//1.5e-3;//1e-3;//8.333*1e-3;//12.5*1e-3;	//移動粒子の移動速度[m/s]
 	check_something=OFF;		//check_something()を実行するかしないか 1=ON 0=OFF
 	check_region=ON;			//条件を満たした粒子を消去するかしないか
 	max_speed=20;//5;			//chec_regionがONになっているとき、粒子の速度がこの値以上なら削除する
@@ -276,10 +278,6 @@ mpsconfig::mpsconfig()
 	adaptive_sw=OFF;		//解像度を可変にするか、しないか 1=ON 0=OFF
 	threshold=1;//1e-3;			//アダプティブにする際の、圧力誤差の閾値
 	fix_surface=0;			//表面流体を固定するかどうか
-	
-	////FSW
-	tool_angle=3;//FSWにおいて、ツールを傾ける角度(弧度)
-	rpm=500;	//ツール回転速度
 
 	model_number=19;
 	model_set_way=1;		//modelをセットする方法　0=正方格子 1=MD
@@ -288,14 +286,14 @@ mpsconfig::mpsconfig()
 
 	////////速度ﾌﾟﾛｯﾄ変数
 	speed_plot_particle=2;	//速度をﾌﾟﾛｯﾄする粒子の種類 1=すべて 2=fluid 3=壁
-	speedtimes=1e-2;//2e-2;//1e-2;//1e-3;		//速度ﾌﾟﾛｯﾄ時の、座標に対する速度の倍率
+	speedtimes=5e-2;//2e-2;//1e-2;//1e-3;		//速度ﾌﾟﾛｯﾄ時の、座標に対する速度の倍率
 	speed_face=1;			//3D解析時のspeed.datの出力面 0=YZ平面 1=XZ
-	speed_face_p=0.0;//0.006;//0.0;		//3D解析時のspeed.datの出力面の座標
+	speed_face_p=0.006;//0.006;//0.0;		//3D解析時のspeed.datの出力面の座標
 	ax_sym_modify=OFF;		//3D時のspeed.datに関して、軸対称による出力修正を行うか否か　1=ON 0=OF
 	flat_speed_plot=ON;	//水平方向の速度(XY面)をﾌﾟﾛｯﾄするかしないか1=ON 0=OFF
 	flat_speed_p=0.004;		//flat_speed.datの出力面の座標
 	relative_speed=OFF;		//重心に対する相対速度を出力するかしないか 1=ON 0=OFF
-	speed_AVS=OFF;			//microAVSによる3D速度分布出力するかしないか 1=ON 0=OFF
+	speed_AVS=ON;			//microAVSによる3D速度分布出力するかしないか 1=ON 0=OFF
 	legend_speed=0.1;		//speed.datの凡例に出力する速度[m/s]
 	set_zero_speed=ON;		//restart時に速度をゼロセットするかしないか  1=ON 0=OFF
 	

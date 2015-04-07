@@ -21274,7 +21274,7 @@ void calc_transitional_EM_field(mpsconfig *CON,int node,int nelm,int nedge,vecto
 		{
 			cout<<"１周期あたりの電磁力の平均計算"<<endl;
 			double TIME2;//電磁力の周期は磁場や電流の周期の半分。TIME2はTIMEから電磁力の周期の半分だけ進めた値
-			TIME2=TIME+1/(4*CON->get_Hz());
+			TIME2=TIME+ (double) 1/(4*CON->get_Hz());
 			cout<<"TIME2="<<TIME2<<endl;
 			double *F2[DIMENTION];//半周期ずれた時間の電磁力を格納				
 			for(int D=0;D<DIMENTION;D++) F2[D]=new double [fluid_number];
