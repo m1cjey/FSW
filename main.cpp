@@ -1910,7 +1910,7 @@ void particle_movie_AVS(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_numbe
 
 		vector<int> ID;//AVSに出力する粒子のidをファイルからこの配列に入力する
 		
-		/*///
+		///
 		if(t==1 && CON->get_restart()==OFF)//最初のステップ時にファイルを生成
 		{
 			ofstream fout2("id_for_AVS.dat");//AVSで追跡する粒子のidを出力
@@ -1949,7 +1949,7 @@ void particle_movie_AVS(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_numbe
 		{
 			output[ID[k]]=ON;
 			num++;
-		}///////////////////////////////////*/
+		}///////////////////////////////////
 
 		for(int i=0;i<fluid_number;i++)
 		{
@@ -1975,8 +1975,8 @@ void particle_movie_AVS(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_numbe
 			{
 				//if(PART[i].toBEM==MOVE && PART[i].r[A_Z]<=0.006-0.2*le)//プローブのみ表示
 				//if(PART[i].toBEM==MOVE && abs(PART[i].r[A_Z])<=0.003-0.2*le)//プローブのみ表示
-				//if(PART[i].toBEM==MOVE && PART[i].r[A_Y]<0) 
-				if(PART[i].toBEM==MOVE)//ツールのみ表示 
+				if(PART[i].toBEM==MOVE && PART[i].r[A_Y]<0) 
+				//if(PART[i].toBEM==MOVE)//ツールのみ表示 
 				//if(PART[i].toBEM==MOVE && PART[i].r[A_X]>0)
 				//if(PART[i].type==FLUID)//非表示 
 				{
@@ -1994,8 +1994,8 @@ void particle_movie_AVS(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_numbe
 				if(t==1)//初期ステップの配置で判断し、あとは最初の判定に従って表示
 				{
 					//f(PART[i].toBEM==MOVE && z<=0.006-0.2*le)//プローブのみ表示
-					//if(PART[i].toBEM==MOVE && PART[i].r[A_Y]<0) 
-					if(PART[i].toBEM==MOVE)//ツールのみ表示 
+					if(PART[i].toBEM==MOVE && PART[i].r[A_Y]<0) 
+					//if(PART[i].toBEM==MOVE)//ツールのみ表示 
 					//if(PART[i].toBEM==MOVE && PART[i].r[A_X]>0)
 					{
 						PART[i].color=1;
@@ -2008,7 +2008,7 @@ void particle_movie_AVS(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_numbe
 					num++;
 				}
 			}
-
+			/*
 			//断面図用output設定
 			if(PART[i].toBEM==MOVE)//ツールのみ表示 
 			{
@@ -2017,8 +2017,8 @@ void particle_movie_AVS(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_numbe
 					output2[i]=ON;
 					num2++;
 				}
-			}
-		}///*/
+			}*/
+		}///
 		
 		avs<<num<<endl;
 		avs2<<num2<<endl;

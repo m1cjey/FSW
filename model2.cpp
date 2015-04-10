@@ -988,7 +988,7 @@ void set_initial_placement_using_MD(mpsconfig *CON,int *particle_number)
 		//calclation type
 		int plunge=1;
 		int traverse=2;
-		int calc_type=2;		//1:plunge 2:traverse
+		int calc_type=1;		//1:plunge 2:traverse
 		if(Dim==3)
 		{
 			///ƒvƒ[ƒu’ê–Êì¬
