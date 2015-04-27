@@ -415,6 +415,7 @@ void calc_Temperature(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_number,
 	}
 
 	///microavs用_全部出力
+	
 	if(t==1 || t%10==0)
 	{
 		int n=0;
@@ -443,7 +444,7 @@ void calc_Temperature(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_number,
 			}
 		}
 		fout5.close();
-
+		
 		sprintf_s(filename,"PART.T%d.fld",t);//他のファイルと同じ階層に生成するならこちら
 		ofstream fout6(filename);
 		if(!fout6)
@@ -466,7 +467,7 @@ void calc_Temperature(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_number,
 		fout6 << "coord    3 file=PART.T" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
 		fout6.close();
 	}
-
+	
 	if(CON->get_dimention()==3)//XZ平面のTも出力
 	{
 		
@@ -530,6 +531,7 @@ void output_temperature_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 	char filename[30];
 	int n=0;
 	double le=CON->get_distancebp();
+	double cross_section=CON->get_speed_face_p();
 	//t=1;//いまはわざと毎ステップ上書き
 
 	//sprintf_s(filename,"pressure/pressure%d",t);//フォルダを作成して管理する場合はこちら
@@ -548,7 +550,7 @@ void output_temperature_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 		{
 			if(PART[i].type==FLUID)
 			{
-				if(PART[i].r[A_Y]<0.5*le && PART[i].r[A_Y]>-0.5*le)	
+				if(PART[i].r[A_Y]<cross_section+0.5*le && PART[i].r[A_Y]>cross_section-0.5*le)	
 				//if(PART[i].r[A_Y]<0.006+0.5*le && PART[i].r[A_Y]>0.006-0.5*le)	
 				{
 					double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく

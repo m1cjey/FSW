@@ -7,7 +7,7 @@ mpsconfig::mpsconfig()
 {
 	///////解析条件
 	dt=1.0e-4;//0.0001;//0.000025*4;//////0.000025*10;//0.0005;//0.000025/2;//0.0000125    //jw法の場合、コイル周期の整数倍にすること         
-	step=10000;
+	step=40000;
 	dimention=3; 
 	
 	maxX=0.02;//0.1;//0.01;
@@ -91,8 +91,9 @@ mpsconfig::mpsconfig()
 	distancebp=0.0005;//0.001;//0.0015;//0.002;//0.001;//0.0005
 	wlength=2;
 	height=-0.004;//-0.004;//0.06;//0.102;//0.18;//0.005;    
-	tool_angle=3;//FSWにおいて、ツールを傾ける角度(弧度)
-	tool_type=1;//FSWにおける、ツール形状0:デフォルト(円柱)　1:円錐 2:円柱裏表
+	tool_angle=0;//FSWにおいて、ツールを傾ける角度(弧度)
+	tool_type=0;//FSWにおける、ツール形状0:デフォルト(円柱)　1:円錐 2:円柱裏表
+	process_type=0;//FSWにおける過程選択		//0:plunge 1:traverse
 	airwall=OFF;//IH釜において、流体上部に壁を配置するかどうか
 
 	///////粒子法用パラメータ
@@ -257,7 +258,7 @@ mpsconfig::mpsconfig()
 	restart=0;				//1=ON 0=OFF
 	autosave=50;			//ｵｰﾄｾｰﾌﾞ間隔。無効にしたいときは大きな数字を代入しておく
 	curan=0;				//ｸｰﾗﾝ数条件　0ならＯＦＦ
-	modify_position=1;	//粒子間距離がleより小さい場合これを修正するか、しないか
+	modify_position=ON;	//粒子間距離がleより小さい場合これを修正するか、しないか
 	vis_calc_type=1;		//粘性項計算手法　0=POSITIVE=陽解法 1=NEGATIVE=陰解法
 	wall_adheision=2;		//0=ﾌﾘｰｽﾘｯﾌﾟ 1=ﾉﾝｽﾘｯﾌﾟ  2=2*ﾉﾝｽﾘｯﾌﾟ
 	laplacian=2;            //0=教科書　1=λ[i] 2=発散・勾配
@@ -269,8 +270,8 @@ mpsconfig::mpsconfig()
 	freeon3sw=1;			//freeon3を計算するかしないか 1=ON 0=OFF
 	surface_judge2=ON;		//surface_judge2()を使用するかしないか  1=ON 0=OFF
 	move_prtcl=ON;			//移動粒子を考慮するかしないか 1=ON 0=OFF
-	move_u_dirct=2;//-3;//2;			//移動粒子を移動する方向　現在は±X方向=±1,±Y方向=±2,±Z方向=±3
-	move_speed=8.333*1e-3;//1.5e-3;//1.5e-3;//1e-3;//8.333*1e-3;//12.5*1e-3;	//移動粒子の移動速度[m/s]
+	move_u_dirct=-3;//-3;//2;			//移動粒子を移動する方向　現在は±X方向=±1,±Y方向=±2,±Z方向=±3
+	move_speed=0.5e-3;//1.0e-3//1.5e-3;//1.5e-3;//1e-3;//8.333*1e-3;//12.5*1e-3;	//移動粒子の移動速度[m/s]
 	check_something=OFF;		//check_something()を実行するかしないか 1=ON 0=OFF
 	check_region=ON;			//条件を満たした粒子を消去するかしないか
 	max_speed=20;//5;			//chec_regionがONになっているとき、粒子の速度がこの値以上なら削除する
@@ -286,12 +287,12 @@ mpsconfig::mpsconfig()
 
 	////////速度ﾌﾟﾛｯﾄ変数
 	speed_plot_particle=2;	//速度をﾌﾟﾛｯﾄする粒子の種類 1=すべて 2=fluid 3=壁
-	speedtimes=5e-2;//2e-2;//1e-2;//1e-3;		//速度ﾌﾟﾛｯﾄ時の、座標に対する速度の倍率
-	speed_face=1;			//3D解析時のspeed.datの出力面 0=YZ平面 1=XZ
-	speed_face_p=0.006;//0.006;//0.0;		//3D解析時のspeed.datの出力面の座標
+	speedtimes=1e-3;//2e-2;//1e-2;//1e-3;		//速度ﾌﾟﾛｯﾄ時の、座標に対する速度の倍率
+	speed_face=2;			//3D解析時のspeed.datの出力面 0=YZ平面 1=XZ	2=XY
+	speed_face_p=-1.0e-3;//0.006;//0.0;		//3D解析時のspeed.datの出力面の座標
 	ax_sym_modify=OFF;		//3D時のspeed.datに関して、軸対称による出力修正を行うか否か　1=ON 0=OF
-	flat_speed_plot=ON;	//水平方向の速度(XY面)をﾌﾟﾛｯﾄするかしないか1=ON 0=OFF
-	flat_speed_p=0.004;		//flat_speed.datの出力面の座標
+	flat_speed_plot=OFF;	//OFF//水平方向の速度(XY面)をﾌﾟﾛｯﾄするかしないか1=ON 0=OFF		//speed_eachにXY平面の出力を付け加えたため不要かも
+	flat_speed_p=-1.0e-3;		//0.004//flat_speed.datの出力面の座標	////speed_eachにXY平面の出力を付け加えたため不要かも
 	relative_speed=OFF;		//重心に対する相対速度を出力するかしないか 1=ON 0=OFF
 	speed_AVS=ON;			//microAVSによる3D速度分布出力するかしないか 1=ON 0=OFF
 	legend_speed=0.1;		//speed.datの凡例に出力する速度[m/s]
@@ -302,7 +303,7 @@ mpsconfig::mpsconfig()
 	MAX_thread=512;			//ひとつのSMあたりの最大ｽﾚｯﾄﾞ数　ふつうは512
 
 	///////ﾌｧｲﾙ出力変数 
-	interval=20;//20;			//２以上の整数にすること
+	interval=50;//20;			//２以上の整数にすること
 	AVS=6;                  //0:普通　1:圧力　2:温度 3:壁非表示 4：表面のみ 5:壁(in,outの区別つき) 6:特定
 	maxT=343;
 	minT=293;

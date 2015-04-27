@@ -986,9 +986,9 @@ void set_initial_placement_using_MD(mpsconfig *CON,int *particle_number)
 		int beforeN;
 
 		//calclation type
-		int plunge=1;
-		int traverse=2;
-		int calc_type=1;		//1:plunge 2:traverse
+		int plunge=0;
+		int traverse=1;
+		int calc_type=CON->get_process_type();		//0:plunge 1:traverse
 		if(Dim==3)
 		{
 			///プローブ底面作成
@@ -1094,7 +1094,7 @@ void set_initial_placement_using_MD(mpsconfig *CON,int *particle_number)
 				}		
 			}
 
-			if(CON->get_tool_type()!=2) for(int i=0;i<number;i++) Z[i]+=2*1e-3;//重心を移動
+			if(CON->get_tool_type()!=2) for(int i=0;i<number;i++) Z[i]+=4*1e-3;//重心を移動
 
 			if(CON->get_tool_angle()>0) 
 			{
@@ -1111,7 +1111,7 @@ void set_initial_placement_using_MD(mpsconfig *CON,int *particle_number)
 			int tool_number=number;
 			
 			//挿入時の解析は下の行をONにし、ツールの位置をあげる
-			if(calc_type==plunge) for(int i=0;i<number;i++) Z[i]+=0.4*1e-2;//重心を移動
+			if(calc_type==plunge) for(int i=0;i<number;i++) Z[i]+=4*1e-3;//重心を移動
 
 			/////////////////////////////流体作成
 			int fluid_number=0;
@@ -1120,7 +1120,7 @@ void set_initial_placement_using_MD(mpsconfig *CON,int *particle_number)
 			double Height=6*1e-3+4*le*B;	//高さ6mm+壁粒子を下に4粒子分
 			if(CON->get_tool_type()==2) Height=6*1e-3;	//表裏ツールの場合、下側の壁を取り払っているので壁粒子の設定の関係で下側に追加する必要がない
 
-			double Depth=30*1e-3+6*le*A;//27*1e-3+6*le*A;	//奥行き27mm+壁粒子を左右に4粒子分
+			double Depth=18*1e-3+6*le*A;//27*1e-3+6*le*A;	//奥行き27mm+壁粒子を左右に4粒子分
 			double depth0=9e-3;				//ツール中心と、手前の壁との距離
 			int BOX_startID=0;				//set_box()開始前の粒子数
 			set_box(X2,Y2,Z2,surface2,&fluid_number,le,Width,Height,Depth);//最後3つの引数は横、高さ、奥行き。デカルト座標の原点に対し、X正方向に横幅、Y正方向に奥行き、Z正方向に高さ

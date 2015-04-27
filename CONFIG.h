@@ -54,6 +54,7 @@ class mpsconfig
 	double height;//流体の重心高さ
 	double tool_angle;//FSWにおいて、ツールを傾ける角度
 	int tool_type;
+	int process_type;
 	int airwall;
 	
 	///////粒子法用パラメータ
@@ -321,6 +322,7 @@ class mpsconfig
 	double get_height()	{return height;}
 	double get_tool_angle() {return tool_angle;}
 	int    get_tool_type() {return tool_type;}
+	int	get_process_type()	{return process_type;}
 	int    get_airwall() {return airwall;}
 	
 	double get_re()		{return re;}
