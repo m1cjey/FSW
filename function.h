@@ -60,6 +60,7 @@ void u_laplacian_f(mpsconfig *CON,vector<mpsparticle> &PART,double *laplacian[DI
 void calc_viscous_term(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_number,int particle_number,double dt,double N0,double *laplacian[DIMENTION],double lamda,int t);
 void calc_vis_value(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_number,double *vis,double dt,int t,int particle_number);
 void output_viscousity_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int particle_number,int fluid_number);
+void output_equivalent_strain_rate_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int particle_number,int fluid_number);
 
 
 //•\–Ê’£—Í

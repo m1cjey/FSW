@@ -1954,15 +1954,16 @@ void particle_movie_AVS(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_numbe
 
 		for(int i=0;i<fluid_number;i++)
 		{
+			if(PART[i].r[A_Y]>0)
 			//if(PART[i].r[A_Y]<0 && PART[i].r[A_Y]>-0.0075)//XZ平面図
 			//if(PART[i].r[A_X]<-le )//XY平面図
-			//if(PART[i].r[A_X]>0)
 			//if(PART[i].type==INWALL)
 			{
 				output[i]=ON;
 				num++;
 			}
-			if(PART[i].r[A_Y]<0.006+0.5*le && PART[i].r[A_Y]>0.006-0.5*le)
+			if(PART[i].r[A_X]>0)
+			//if(PART[i].r[A_Y]<0.006+0.5*le && PART[i].r[A_Y]>0.006-0.5*le)
 			{
 				output2[i]=ON;
 				num2++;
@@ -1975,10 +1976,11 @@ void particle_movie_AVS(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_numbe
 			
 			if(CON->get_tool_angle()==0)//ツール回転なしの場合
 			{
+				if(PART[i].toBEM==MOVE&&PART[i].r[A_Y]>0)
 				//if(PART[i].toBEM==MOVE && PART[i].r[A_Z]<=0.006-0.2*le)//プローブのみ表示
 				//if(PART[i].toBEM==MOVE && abs(PART[i].r[A_Z])<=0.003-0.2*le)//プローブのみ表示
 				//if(PART[i].toBEM==MOVE && PART[i].r[A_Y]<0) 
-				if(PART[i].toBEM==MOVE)//ツールのみ表示 
+				//if(PART[i].toBEM==MOVE)//ツールのみ表示 
 				//if(PART[i].toBEM==MOVE && PART[i].r[A_X]>0)
 				//if(PART[i].type==FLUID)//非表示 
 				{
@@ -1995,10 +1997,10 @@ void particle_movie_AVS(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_numbe
 				
 				if(t==1)//初期ステップの配置で判断し、あとは最初の判定に従って表示
 				{
-					if(PART[i].toBEM==MOVE && z<=0.006-0.2*le)//プローブのみ表示
+					//if(PART[i].toBEM==MOVE && z<=0.006-0.2*le)//プローブのみ表示
 					//if(PART[i].toBEM==MOVE && PART[i].r[A_Y]<0) 
 					//if(PART[i].toBEM==MOVE)//ツールのみ表示 
-					//if(PART[i].toBEM==MOVE && PART[i].r[A_X]>0)
+					if(PART[i].toBEM==MOVE && PART[i].r[A_Y]>0)
 					{
 						PART[i].color=1;
 					}
@@ -2014,7 +2016,8 @@ void particle_movie_AVS(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_numbe
 			//断面図用output設定
 			if(PART[i].toBEM==MOVE)//ツールのみ表示 
 			{
-				if(PART[i].r[A_Y]<0.006+0.5*le && PART[i].r[A_Y]>0.006-0.5*le)
+				if(PART[i].r[A_X]>0)
+				//if(PART[i].r[A_Y]<0.006+0.5*le && PART[i].r[A_Y]>0.006-0.5*le)
 				{
 					output2[i]=ON;
 					num2++;
@@ -3070,7 +3073,8 @@ void visterm_negative(mpsconfig *CON,vector<mpsparticle> &PART,double *laplacian
 		calc_vis_value(CON,PART,fluid_number,vis,dt,t,particle_number);//FSWモデルの場合
 		for(int i=0;i<particle_number;i++)	PART[i].vis=0;
 		for(int i=0;i<fluid_number;i++)	PART[i].vis=vis[i];
-		if(t==0||t%CON->get_interval()==0)	output_viscousity_avs(CON,PART,t,particle_number,fluid_number);
+		if(t==1||t%10==0)	output_viscousity_avs(CON,PART,t,particle_number,fluid_number);
+		if(t==1||t%10==0)	output_equivalent_strain_rate_avs(CON,PART,t,particle_number,fluid_number);
 	}
 	else for(int i=0;i<fluid_number;i++) vis[i]=vis0;
 
@@ -5815,6 +5819,9 @@ void calc_vis_value(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_number,do
 	}////*/
 	//cout<<(GetTickCount()-timeA)*0.001<<endl;
 
+	for(int i=0;i<particle_number;i++)	PART[i].ep=0;
+	for(int i=0;i<fluid_number;i++)		PART[i].ep=ep[i];
+
 	//動粘性値出力
 	if(t==1 || t%10==0)
 	{
@@ -5858,7 +5865,7 @@ void calc_vis_value(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_number,do
 	delete [] N;
 }
 
-//温度AVSファイル出力関数
+//動粘性係数AVSファイル出力関数
 void output_viscousity_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int particle_number,int fluid_number)
 {
 	char filename[30];
@@ -5945,7 +5952,92 @@ void output_viscousity_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int pa
 	fout2.close();
 }
 
+//相当ひずみ率AVS出力関数
+void output_equivalent_strain_rate_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int particle_number,int fluid_number)
+{
+	char filename[30];
+	int n=0;
+	double le=CON->get_distancebp();
+	double cross_section=CON->get_speed_face_p();
+	//t=1;//いまはわざと毎ステップ上書き
 
+	//sprintf_s(filename,"pressure/pressure%d",t);//フォルダを作成して管理する場合はこちら
+	sprintf_s(filename,"ep_XZ%d",t);//他のファイルと同じ階層に生成するならこちら
+	ofstream fout(filename);
+	if(!fout)
+	{
+		cout << "cannot open" << filename << endl;
+		exit(EXIT_FAILURE);
+	}
+
+
+	if(CON->get_dimention()==3)
+	{
+		for(int i=0;i<particle_number;i++)
+		{
+			if(PART[i].type==FLUID)
+			{
+				if(PART[i].r[A_Y]<cross_section+0.5*le && PART[i].r[A_Y]>cross_section-0.5*le)	
+				//if(PART[i].r[A_Y]<0.006+0.5*le && PART[i].r[A_Y]>0.006-0.5*le)	
+				{
+					double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
+					double y=PART[i].r[A_Y]*1.0E+05;
+					double z=PART[i].r[A_Z]*1.0E+05;
+					double P=PART[i].ep;
+					fout << P << "\t" << x << "\t" << y << "\t" << z << endl;
+					n++;
+				}
+			}
+		}
+	}
+	else if(CON->get_dimention()==2)
+	{
+		for(int i=0;i<particle_number;i++)
+		{
+			if(PART[i].type!=FLUID)
+			{
+			double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
+			double y=PART[i].r[A_Y]*1.0E+05;
+			double z=PART[i].r[A_Z]*1.0E+05;
+
+			//double x=PART[i].r[A_X];//*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
+			//double y=PART[i].r[A_Y];//*1.0E+05;
+			//double z=PART[i].r[A_Z];//*1.0E+05;
+			double P=PART[i].ep;
+			//double P=PART[i].heat_gene_before1;
+			fout << P << "\t" << x << "\t" << y << "\t" << z << endl;
+			n++;
+		}
+		}
+	}
+	fout.close();
+	//sprintf_s(filename,"pressure/pressure%d.fld",t);//フォルダを作成して管理する場合はこちら
+	sprintf_s(filename,"ep_XZ%d.fld",t);//他のファイルと同じ階層に生成するならこちら
+	ofstream fout2(filename);
+	if(!fout2)
+	{
+		cout << "cannot open" << filename << endl;
+		exit(EXIT_FAILURE);
+	}
+
+	fout2 << "# AVS field file" << endl;
+	fout2 << "ndim=1" << endl;
+	fout2 << "dim1=" << n <<endl;
+	fout2 << "nspace=3" << endl;
+	fout2 << "veclen=1" << endl;
+	fout2 << "data=float" << endl;
+	fout2 << "field=irregular" << endl;
+	fout2 << "label=equivalent_strain_rate" << endl << endl;
+	//fout2 << "variable 1 file=./pressure" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//フォルダを作成して管理する場合はこちら
+	//fout2 << "coord    1 file=./pressure" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//フォルダを作成して管理する場合はこちら
+	//fout2 << "coord    2 file=./pressure" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//フォルダを作成して管理する場合はこちら
+	//fout2 << "coord    3 file=./pressure" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//フォルダを作成して管理する場合はこちら
+	fout2 << "variable 1 file=ep_XZ" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+	fout2 << "coord    1 file=ep_XZ" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+	fout2 << "coord    2 file=ep_XZ" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+	fout2 << "coord    3 file=ep_XZ" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+	fout2.close();
+}
 
 //各粒子の物性値を温度に応じて変化させる//産総研のデータベース　http://riodb.ibase.aist.go.jp/TPDB/DBGVsupport/detail/aluminum.html
 void calc_physical_property(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_number,double *val,int particle_number,int sw)

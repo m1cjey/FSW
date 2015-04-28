@@ -92,7 +92,7 @@ mpsconfig::mpsconfig()
 	wlength=2;
 	height=-0.004;//-0.004;//0.06;//0.102;//0.18;//0.005;    
 	tool_angle=0;//FSWにおいて、ツールを傾ける角度(弧度)
-	tool_type=0;//FSWにおける、ツール形状0:デフォルト(円柱)　1:円錐 2:円柱裏表
+	tool_type=1;//FSWにおける、ツール形状0:デフォルト(円柱)　1:円錐 2:円柱裏表
 	process_type=0;//FSWにおける過程選択		//0:plunge 1:traverse
 	airwall=OFF;//IH釜において、流体上部に壁を配置するかどうか
 
@@ -271,7 +271,7 @@ mpsconfig::mpsconfig()
 	surface_judge2=ON;		//surface_judge2()を使用するかしないか  1=ON 0=OFF
 	move_prtcl=ON;			//移動粒子を考慮するかしないか 1=ON 0=OFF
 	move_u_dirct=-3;//-3;//2;			//移動粒子を移動する方向　現在は±X方向=±1,±Y方向=±2,±Z方向=±3
-	move_speed=0.5e-3;//1.0e-3//1.5e-3;//1.5e-3;//1e-3;//8.333*1e-3;//12.5*1e-3;	//移動粒子の移動速度[m/s]
+	move_speed=1.0e-3;//1.0e-3//1.5e-3;//1.5e-3;//1e-3;//8.333*1e-3;//12.5*1e-3;	//移動粒子の移動速度[m/s]
 	check_something=OFF;		//check_something()を実行するかしないか 1=ON 0=OFF
 	check_region=ON;			//条件を満たした粒子を消去するかしないか
 	max_speed=20;//5;			//chec_regionがONになっているとき、粒子の速度がこの値以上なら削除する

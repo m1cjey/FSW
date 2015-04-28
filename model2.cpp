@@ -1111,7 +1111,7 @@ void set_initial_placement_using_MD(mpsconfig *CON,int *particle_number)
 			int tool_number=number;
 			
 			//挿入時の解析は下の行をONにし、ツールの位置をあげる
-			if(calc_type==plunge) for(int i=0;i<number;i++) Z[i]+=4*1e-3;//重心を移動
+			if(calc_type==plunge) for(int i=0;i<number;i++) Z[i]+=2*1e-3;//重心を移動
 
 			/////////////////////////////流体作成
 			int fluid_number=0;

@@ -475,7 +475,6 @@ void calc_Temperature(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_number,
 		for(int i=0;i<particle_number;i++) if(PART[i].r[A_Y]<le && PART[i].r[A_Y]>-le) fh<<PART[i].r[A_X]<<"\t"<<PART[i].r[A_Z]<<"\t"<<T[i]<<endl;
 		fh.close();
 	}
-
     
     delete [] T;
 	delete [] insulate;

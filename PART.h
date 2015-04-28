@@ -23,6 +23,7 @@ public:
 	double T; //温度[K]
 	double L; //基準長さ 可変解像度粒子法関係で用いる。一定解像度の場合はleと同値
 	double vis;//粘性係数
+	double ep;//相当ひずみ率
 	
 	int type;	//FLUID INWALL OUTWALL
 	int materialID;	//材質番号 1ならdensity,2ならdensity2などを使用
