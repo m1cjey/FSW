@@ -1901,12 +1901,15 @@ void particle_movie_AVS(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_numbe
 	{
 		int num=0;//表示する粒子数
 		int num2=0;//表示する粒子数
+		int num3=0;
 		int *output=new int [particle_number];//ONなら出力　OFFなら出力しない
 		int *output2=new int [particle_number];//ONなら出力　OFFなら出力しない
+		int *output3=new int [particle_number];
 		for(int i=0;i<particle_number;i++) 
 		{
 				output[i]=OFF;//初期化
 				output2[i]=OFF;//初期化
+				output3[i]=OFF;
 		}
 
 		vector<int> ID;//AVSに出力する粒子のidをファイルからこの配列に入力する
@@ -1954,7 +1957,7 @@ void particle_movie_AVS(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_numbe
 
 		for(int i=0;i<fluid_number;i++)
 		{
-			if(PART[i].r[A_Y]>0)
+			//if(PART[i].r[A_Y]>0)
 			//if(PART[i].r[A_Y]<0 && PART[i].r[A_Y]>-0.0075)//XZ平面図
 			//if(PART[i].r[A_X]<-le )//XY平面図
 			//if(PART[i].type==INWALL)
@@ -1968,6 +1971,11 @@ void particle_movie_AVS(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_numbe
 				output2[i]=ON;
 				num2++;
 			}
+			if(PART[i].r[A_Y]>0)
+			{
+				output3[i]=ON;
+				num3++;
+			}
 		}
 
 		//output[i]入力
@@ -1976,11 +1984,11 @@ void particle_movie_AVS(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_numbe
 			
 			if(CON->get_tool_angle()==0)//ツール回転なしの場合
 			{
-				if(PART[i].toBEM==MOVE&&PART[i].r[A_Y]>0)
+				//if(PART[i].toBEM==MOVE&&PART[i].r[A_Y]>0)
 				//if(PART[i].toBEM==MOVE && PART[i].r[A_Z]<=0.006-0.2*le)//プローブのみ表示
 				//if(PART[i].toBEM==MOVE && abs(PART[i].r[A_Z])<=0.003-0.2*le)//プローブのみ表示
 				//if(PART[i].toBEM==MOVE && PART[i].r[A_Y]<0) 
-				//if(PART[i].toBEM==MOVE)//ツールのみ表示 
+				if(PART[i].toBEM==MOVE)//ツールのみ表示 
 				//if(PART[i].toBEM==MOVE && PART[i].r[A_X]>0)
 				//if(PART[i].type==FLUID)//非表示 
 				{
@@ -1999,8 +2007,8 @@ void particle_movie_AVS(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_numbe
 				{
 					//if(PART[i].toBEM==MOVE && z<=0.006-0.2*le)//プローブのみ表示
 					//if(PART[i].toBEM==MOVE && PART[i].r[A_Y]<0) 
-					//if(PART[i].toBEM==MOVE)//ツールのみ表示 
-					if(PART[i].toBEM==MOVE && PART[i].r[A_Y]>0)
+					if(PART[i].toBEM==MOVE)//ツールのみ表示 
+					//if(PART[i].toBEM==MOVE && PART[i].r[A_Y]>0)
 					{
 						PART[i].color=1;
 					}
@@ -2022,11 +2030,17 @@ void particle_movie_AVS(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_numbe
 					output2[i]=ON;
 					num2++;
 				}
+				if(PART[i].r[A_Y]>0)
+				{
+					output3[i]=ON;
+					num3++;
+				}
 			}
 		}///
 		
 		avs<<num<<endl;
 		avs2<<num2<<endl;
+		avs3<<num3<<endl;
 		/////////////////////////////////
 
 		////粒子出力
@@ -2116,6 +2130,47 @@ void particle_movie_AVS(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_numbe
 
 					avs2<<red<<" "<<green<<" "<<blue<<endl;//色出力
 				}  
+
+				if(output3[i]==ON) 
+				{
+					if(PART[i].type==FLUID && PART[i].surface==OFF) {red=0;green=0;blue=1;}
+					else if(PART[i].type==FLUID && PART[i].surface==ON) {red=0;green=0.5;blue=0.5;}
+	        		else {red=0.5;green=0.5;blue=0;}//壁粒子
+
+					if(PART[i].type==FLUID)
+					{
+						//if(PART[i].materialID==1)  {red=0;green=0;blue=1;}
+						//else if(PART[i].materialID==2)  {red=1;green=0;blue=0;}
+						//if(PART[i].r[A_X]>0)  {red=1;green=0;blue=0;}
+						//else {red=0;green=0;blue=1;}
+						if(t==1)
+						{
+							if(PART[i].r[A_X]>0)  
+							{
+								red=1;green=0;blue=0;
+								PART[i].color=1;//1なら赤
+							}
+							else 
+							{
+								red=0;green=0;blue=1;
+								PART[i].color=2;//2なら青
+							}
+						}
+						else
+						{
+							
+							if(PART[i].color==1) {red=1;green=0;blue=0;}
+							else if(PART[i].color==2) {red=0;green=0;blue=1;}
+
+						}
+					}
+			    
+					avs3<<PART[i].r[A_X]<<" "<<PART[i].r[A_Y]<<" "<<PART[i].r[A_Z]<<" ";//座標出力
+			
+					avs3<<le<<" ";//粒子の大きさ出力
+
+					avs3<<red<<" "<<green<<" "<<blue<<endl;//色出力
+				}  
 			}
 			else 
 			{
@@ -2160,11 +2215,34 @@ void particle_movie_AVS(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_numbe
 
 					avs2<<red<<" "<<green<<" "<<blue<<endl;//色出力
 				}  
+
+				if(output3[i]==ON) 
+				{	
+					if(PART[i].type==FLUID && PART[i].surface==OFF) {red=0;green=0;blue=1;}
+					else if(PART[i].type==FLUID && PART[i].surface==ON) {red=0;green=0.5;blue=0.5;}
+	        		else {red=0.5;green=0.5;blue=0;}//壁粒子
+
+					if(PART[i].type==FLUID)
+					{
+						//if(PART[i].materialID==1)  {red=0;green=0;blue=1;}
+						//else if(PART[i].materialID==2)  {red=1;green=0;blue=0;}
+						if(PART[i].r[A_X]>0)  {red=1;green=0;blue=0;}
+						else {red=0;green=0;blue=1;}
+					}
+			    
+					avs3<<PART[i].r[A_X]<<" "<<PART[i].r[A_Y]<<" "<<PART[i].r[A_Z]<<" ";//座標出力
+			
+					avs3<<le<<" ";//粒子の大きさ出力
+
+					avs3<<red<<" "<<green<<" "<<blue<<endl;//色出力
+				}    
+
 			}
 		}
 
 		delete [] output;
 		delete [] output2;
+		delete [] output3;
 	}
 
 
@@ -2173,6 +2251,7 @@ void particle_movie_AVS(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_numbe
 
 	avs.close();
 	avs2.close();
+	avs3.close();
 		////////////////////
 }
 
@@ -2475,7 +2554,7 @@ void plot_speed_each(mpsconfig *CON ,vector<mpsparticle> &PART,int particle_numb
 	xmax=-100;						//出力粒子の最大横座標
 	ymax=-100;						//出力粒子の最大縦座標
 	
-	if(t==1 || t%10==0)
+	if(t==1 || t%CON->get_interval()==0)
 	{
 		char filename[20];
 		sprintf_s(filename,"speed%d.dat", t);
@@ -3073,8 +3152,8 @@ void visterm_negative(mpsconfig *CON,vector<mpsparticle> &PART,double *laplacian
 		calc_vis_value(CON,PART,fluid_number,vis,dt,t,particle_number);//FSWモデルの場合
 		for(int i=0;i<particle_number;i++)	PART[i].vis=0;
 		for(int i=0;i<fluid_number;i++)	PART[i].vis=vis[i];
-		if(t==1||t%10==0)	output_viscousity_avs(CON,PART,t,particle_number,fluid_number);
-		if(t==1||t%10==0)	output_equivalent_strain_rate_avs(CON,PART,t,particle_number,fluid_number);
+		if(t==1||t%CON->get_interval()==0)	output_viscousity_avs(CON,PART,t,particle_number,fluid_number);
+		if(t==1||t%CON->get_interval()==0)	output_equivalent_strain_rate_avs(CON,PART,t,particle_number,fluid_number);
 	}
 	else for(int i=0;i<fluid_number;i++) vis[i]=vis0;
 

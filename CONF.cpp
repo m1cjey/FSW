@@ -166,7 +166,7 @@ mpsconfig::mpsconfig()
 	T_CGep=1.0e-3;			//収束判定
 	buoyant=OFF;			//浮力(密度のブジネスク近似)  1=ON 0=OFF
 	TplotZ=0.004;			//3D解析において、XY平面の温度を出力するときのＺ座標
-	T_AVS=10;				//microAVS用の温度ファイルを出力するstep間隔。0ならOFF
+	T_AVS=50;				//microAVS用の温度ファイルを出力するstep間隔。0ならOFF
 
 	////////電磁力計算
 	EM_method=0;			//電磁場の解法 0=OFF 1=FEM 2=BEM 3=磁気ﾓｰﾒﾝﾄ法
