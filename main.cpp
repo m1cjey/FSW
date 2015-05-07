@@ -615,7 +615,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		foutc.close();
 
 		///ポスト処理：各物理量出力＆ｸｰﾗﾝ数によるdt改変&microAVS出力
-//		post_processing(&CON,PART,fluid_number,particle_number,dt,Umax,mindis,t,TIME,time0,count_avs);	//05/01
+		post_processing(&CON,PART,fluid_number,particle_number,dt,Umax,mindis,t,TIME,time0,count_avs);	
 
 		if(t==1 || t%CON.get_interval()==0) output_alldata_AVS(&CON,PART,fluid_number,particle_number,dt,Umax,mindis,t,TIME,time0,count_avs);
 		
@@ -1914,7 +1914,7 @@ void particle_movie_AVS(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_numbe
 
 		vector<int> ID;//AVSに出力する粒子のidをファイルからこの配列に入力する
 		
-		/*///
+		/*//
 		if(t==1 && CON->get_restart()==OFF)//最初のステップ時にファイルを生成
 		{
 			ofstream fout2("id_for_AVS.dat");//AVSで追跡する粒子のidを出力
