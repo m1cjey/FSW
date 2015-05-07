@@ -92,7 +92,7 @@ mpsconfig::mpsconfig()
 	wlength=2;
 	height=-0.004;//-0.004;//0.06;//0.102;//0.18;//0.005;    
 	tool_angle=0;//FSWにおいて、ツールを傾ける角度(弧度)
-	tool_type=1;//FSWにおける、ツール形状0:デフォルト(円柱)　1:円錐 2:円柱裏表
+	tool_type=0;//FSWにおける、ツール形状0:デフォルト(円柱)　1:円錐 2:円柱裏表
 	process_type=0;//FSWにおける過程選択		//0:plunge 1:traverse
 	airwall=OFF;//IH釜において、流体上部に壁を配置するかどうか
 
@@ -167,6 +167,7 @@ mpsconfig::mpsconfig()
 	buoyant=OFF;			//浮力(密度のブジネスク近似)  1=ON 0=OFF
 	TplotZ=0.004;			//3D解析において、XY平面の温度を出力するときのＺ座標
 	T_AVS=50;				//microAVS用の温度ファイルを出力するstep間隔。0ならOFF
+	output_temperature_face=0;	//0=XZ平面	1=YZ平面	2=XY平面
 
 	////////電磁力計算
 	EM_method=0;			//電磁場の解法 0=OFF 1=FEM 2=BEM 3=磁気ﾓｰﾒﾝﾄ法
@@ -279,6 +280,8 @@ mpsconfig::mpsconfig()
 	adaptive_sw=OFF;		//解像度を可変にするか、しないか 1=ON 0=OFF
 	threshold=1;//1e-3;			//アダプティブにする際の、圧力誤差の閾値
 	fix_surface=0;			//表面流体を固定するかどうか
+	output_viscousity_face=0;	//0=XZ平面	1=YZ平面	2=XY平面	//動粘性係数出力面
+	output_equivalent_strain_rate_face=0;	//0=XZ平面	1=YZ平面	2=XY平面	//相当ひずみ率出力面
 
 	model_number=19;
 	model_set_way=1;		//modelをセットする方法　0=正方格子 1=MD

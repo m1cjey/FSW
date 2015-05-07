@@ -130,6 +130,8 @@ class mpsconfig
 	int    buoyant;		//浮力(密度のﾌﾞｼﾞﾈｽｸ近似)  1=ON 0=OFF
 	double TplotZ;		//3D解析において、XY平面の温度を出力するときのＺ座標
 	int    T_AVS;		//microAVS用の温度ファイルを出力するstep間隔。0ならOFF
+	int output_temperature_face;
+	int output_equivalent_strain_rate_face;
 
 	////////電磁場の解法
 	int		EM_method;			//電磁場の解法 0=OFF 1=FEM 2=BEM 3=磁気ﾓｰﾒﾝﾄ法
@@ -245,6 +247,7 @@ class mpsconfig
 	int    adaptive_sw;	//解像度を可変にするか、しないか 1=ON 0=OFF
 	double threshold;	//アダプティブにする際の、圧力誤差の閾値
 	int    fix_surface;
+	int output_viscousity_face;
 	
 	int    model_number;
 	int    model_set_way;		//modelをセットする方法　0=正方格子 1=MD
@@ -395,6 +398,7 @@ class mpsconfig
 	int    get_buoyant()	{return buoyant;}
 	double get_TplotZ()		{return TplotZ;}
 	int    get_T_AVS()		{return T_AVS;}
+	int get_output_temperature_face()	{return		output_temperature_face;}
 
 	int    get_EM_method()	{return EM_method;}
 	int    get_EM_calc_type() {return EM_calc_type;}
@@ -503,6 +507,8 @@ class mpsconfig
 	int    get_adaptive_sw(){return adaptive_sw;}	//解像度を可変にするか、しないか 1=ON 0=OFF
 	double get_threshold(){return threshold;}		//アダプティブにする際の、圧力誤差の閾値
 	int get_fix_surface(){return fix_surface;}
+	int get_output_viscousity_face(){return output_viscousity_face;}
+	int get_output_equivalent_strain_rate_face(){return output_equivalent_strain_rate_face;}
 
 	int    get_model_number(){return model_number;}
 	int    get_model_set_way(){return model_set_way;}

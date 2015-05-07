@@ -615,7 +615,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		foutc.close();
 
 		///ポスト処理：各物理量出力＆ｸｰﾗﾝ数によるdt改変&microAVS出力
-		post_processing(&CON,PART,fluid_number,particle_number,dt,Umax,mindis,t,TIME,time0,count_avs);
+//		post_processing(&CON,PART,fluid_number,particle_number,dt,Umax,mindis,t,TIME,time0,count_avs);	//05/01
 
 		if(t==1 || t%CON.get_interval()==0) output_alldata_AVS(&CON,PART,fluid_number,particle_number,dt,Umax,mindis,t,TIME,time0,count_avs);
 		
@@ -5951,10 +5951,14 @@ void output_viscousity_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int pa
 	int n=0;
 	double le=CON->get_distancebp();
 	double cross_section=CON->get_speed_face_p();
+	int output_face=CON->get_output_viscousity_face();
 	//t=1;//いまはわざと毎ステップ上書き
 
 	//sprintf_s(filename,"pressure/pressure%d",t);//フォルダを作成して管理する場合はこちら
-	sprintf_s(filename,"vis_XZ%d",t);//他のファイルと同じ階層に生成するならこちら
+	if(cross_section==0)	sprintf_s(filename,"vis_XZ%d",t);//他のファイルと同じ階層に生成するならこちら
+	else if(cross_section==1)	sprintf_s(filename,"vis_YZ%d",t);
+	else if(cross_section==2)	sprintf_s(filename,"vis_XY%d",t);
+
 	ofstream fout(filename);
 	if(!fout)
 	{
@@ -5969,7 +5973,7 @@ void output_viscousity_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int pa
 		{
 			if(PART[i].type==FLUID)
 			{
-				if(PART[i].r[A_Y]<cross_section+0.5*le && PART[i].r[A_Y]>cross_section-0.5*le)	
+				if(PART[i].r[output_face]<cross_section+0.5*le && PART[i].r[output_face]>cross_section-0.5*le)	
 				//if(PART[i].r[A_Y]<0.006+0.5*le && PART[i].r[A_Y]>0.006-0.5*le)	
 				{
 					double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
@@ -6038,10 +6042,14 @@ void output_equivalent_strain_rate_avs(mpsconfig *CON,vector<mpsparticle> &PART,
 	int n=0;
 	double le=CON->get_distancebp();
 	double cross_section=CON->get_speed_face_p();
+	int output_face=CON->get_output_equivalent_strain_rate_face();
 	//t=1;//いまはわざと毎ステップ上書き
 
 	//sprintf_s(filename,"pressure/pressure%d",t);//フォルダを作成して管理する場合はこちら
-	sprintf_s(filename,"ep_XZ%d",t);//他のファイルと同じ階層に生成するならこちら
+	if(cross_section==0)	sprintf_s(filename,"ep_XZ%d",t);//他のファイルと同じ階層に生成するならこちら
+	else if(cross_section==1)	sprintf_s(filename,"ep_YZ%d",t);
+	else if(cross_section==2)	sprintf_s(filename,"ep_XY%d",t);
+
 	ofstream fout(filename);
 	if(!fout)
 	{
@@ -6056,7 +6064,7 @@ void output_equivalent_strain_rate_avs(mpsconfig *CON,vector<mpsparticle> &PART,
 		{
 			if(PART[i].type==FLUID)
 			{
-				if(PART[i].r[A_Y]<cross_section+0.5*le && PART[i].r[A_Y]>cross_section-0.5*le)	
+				if(PART[i].r[output_face]<cross_section+0.5*le && PART[i].r[output_face]>cross_section-0.5*le)	
 				//if(PART[i].r[A_Y]<0.006+0.5*le && PART[i].r[A_Y]>0.006-0.5*le)	
 				{
 					double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
