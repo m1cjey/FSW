@@ -91,8 +91,8 @@ mpsconfig::mpsconfig()
 	distancebp=0.0005;//0.001;//0.0015;//0.002;//0.001;//0.0005
 	wlength=2;
 	height=-0.004;//-0.004;//0.06;//0.102;//0.18;//0.005;    
-	tool_angle=0;//FSWにおいて、ツールを傾ける角度(弧度)
-	tool_type=0;//FSWにおける、ツール形状0:デフォルト(円柱)　1:円錐 2:円柱裏表
+	tool_angle=3;//FSWにおいて、ツールを傾ける角度(弧度)
+	tool_type=1;//FSWにおける、ツール形状0:デフォルト(円柱)　1:円錐 2:円柱裏表
 	process_type=0;//FSWにおける過程選択		//0:plunge 1:traverse
 	airwall=OFF;//IH釜において、流体上部に壁を配置するかどうか
 
@@ -166,8 +166,8 @@ mpsconfig::mpsconfig()
 	T_CGep=1.0e-3;			//収束判定
 	buoyant=OFF;			//浮力(密度のブジネスク近似)  1=ON 0=OFF
 	TplotZ=0.004;			//3D解析において、XY平面の温度を出力するときのＺ座標
-	T_AVS=50;				//microAVS用の温度ファイルを出力するstep間隔。0ならOFF
-	output_temperature_face=0;	//0=XZ平面	1=YZ平面	2=XY平面
+	T_AVS=100;				//microAVS用の温度ファイルを出力するstep間隔。0ならOFF
+	output_temperature_face=1;	//0=YZ平面 1=XZ平面	2=XY平面
 
 	////////電磁力計算
 	EM_method=0;			//電磁場の解法 0=OFF 1=FEM 2=BEM 3=磁気ﾓｰﾒﾝﾄ法
@@ -280,8 +280,10 @@ mpsconfig::mpsconfig()
 	adaptive_sw=OFF;		//解像度を可変にするか、しないか 1=ON 0=OFF
 	threshold=1;//1e-3;			//アダプティブにする際の、圧力誤差の閾値
 	fix_surface=0;			//表面流体を固定するかどうか
-	output_viscousity_face=0;	//0=XZ平面	1=YZ平面	2=XY平面	//動粘性係数出力面
-	output_equivalent_strain_rate_face=0;	//0=XZ平面	1=YZ平面	2=XY平面	//相当ひずみ率出力面
+	output_viscousity_face=1;	//0=YZ平面 1=XZ平面	2=XY平面	//動粘性係数出力面
+	output_equivalent_strain_rate_face=1;	// 0=YZ平面 1=XZ平面	2=XY平面	//相当ひずみ率出力面
+	output_forward=ON;
+	output_backward=ON;
 
 	model_number=19;
 	model_set_way=1;		//modelをセットする方法　0=正方格子 1=MD
@@ -291,8 +293,8 @@ mpsconfig::mpsconfig()
 	////////速度ﾌﾟﾛｯﾄ変数
 	speed_plot_particle=2;	//速度をﾌﾟﾛｯﾄする粒子の種類 1=すべて 2=fluid 3=壁
 	speedtimes=1e-3;//2e-2;//1e-2;//1e-3;		//速度ﾌﾟﾛｯﾄ時の、座標に対する速度の倍率
-	speed_face=2;			//3D解析時のspeed.datの出力面 0=YZ平面 1=XZ	2=XY
-	speed_face_p=-1.0e-3;//0.006;//0.0;		//3D解析時のspeed.datの出力面の座標
+	speed_face=1;			//3D解析時のspeed.datの出力面 0=YZ平面 1=XZ	2=XY
+	speed_face_p=0.0;//-1.0e-3;//0.006;//0.0;		//3D解析時のspeed.datの出力面の座標
 	ax_sym_modify=OFF;		//3D時のspeed.datに関して、軸対称による出力修正を行うか否か　1=ON 0=OF
 	flat_speed_plot=OFF;	//OFF//水平方向の速度(XY面)をﾌﾟﾛｯﾄするかしないか1=ON 0=OFF		//speed_eachにXY平面の出力を付け加えたため不要かも
 	flat_speed_p=-1.0e-3;		//0.004//flat_speed.datの出力面の座標	////speed_eachにXY平面の出力を付け加えたため不要かも
@@ -306,7 +308,7 @@ mpsconfig::mpsconfig()
 	MAX_thread=512;			//ひとつのSMあたりの最大ｽﾚｯﾄﾞ数　ふつうは512
 
 	///////ﾌｧｲﾙ出力変数 
-	interval=50;//20;			//２以上の整数にすること
+	interval=100;//20;			//２以上の整数にすること
 	AVS=6;                  //0:普通　1:圧力　2:温度 3:壁非表示 4：表面のみ 5:壁(in,outの区別つき) 6:特定
 	maxT=343;
 	minT=293;

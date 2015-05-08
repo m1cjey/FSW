@@ -132,6 +132,8 @@ class mpsconfig
 	int    T_AVS;		//microAVS用の温度ファイルを出力するstep間隔。0ならOFF
 	int output_temperature_face;
 	int output_equivalent_strain_rate_face;
+	int output_forward;
+	int output_backward;
 
 	////////電磁場の解法
 	int		EM_method;			//電磁場の解法 0=OFF 1=FEM 2=BEM 3=磁気ﾓｰﾒﾝﾄ法
@@ -509,6 +511,8 @@ class mpsconfig
 	int get_fix_surface(){return fix_surface;}
 	int get_output_viscousity_face(){return output_viscousity_face;}
 	int get_output_equivalent_strain_rate_face(){return output_equivalent_strain_rate_face;}
+	int get_output_forward(){return output_forward;}
+	int get_output_backward(){return output_backward;}
 
 	int    get_model_number(){return model_number;}
 	int    get_model_set_way(){return model_set_way;}
