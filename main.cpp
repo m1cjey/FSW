@@ -284,6 +284,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	//計算スタート
 	for(int t=1;t<=STEP;t++)
 	{	
+
 		unsigned int timet=GetTickCount();
 			
 		cout<<"陽解析 start:step="<<t<<" 流体粒子数="<<fluid_number<<" 全粒子数="<<particle_number<<endl;
@@ -1138,7 +1139,7 @@ void post_processing(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_number,i
 	//AVSに粒子データ出力/////////////////////////////////
 	
 	//cout<<"粒子avsデータ出力開始----";
-	/*
+	
 	if(CON->get_curan()==0) if(t==1 || t%CON->get_interval()==0) particle_movie_AVS(CON,PART,fluid_number,particle_number,t,TIME);
 	else if(CON->get_curan()>0)
 	{
@@ -1149,11 +1150,12 @@ void post_processing(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_number,i
 		f<<count_avs<<endl;
 		f.close();
 	}
-	cout<<"ok"<<endl;*///05/08
+	cout<<"ok"<<endl;
 
 	///速度をプロット
 //	plot_speed(CON ,PART,particle_number,fluid_number);
-	plot_speed_each(CON ,PART,particle_number,fluid_number,t);
+	plot_speed_each(CON ,PART,particle_number,fluid_number,t);	
+	if(t==1||t%CON->get_interval()==0)	physical_quantity_movie_AVS(CON,t,PART,particle_number);
 
 	//////座標ﾌﾟﾛｯﾄ/////////////////////////
 	//////座標ﾌﾟﾛｯﾄ/////////////////////////
@@ -2459,10 +2461,11 @@ void plot_speed_each(mpsconfig *CON ,vector<mpsparticle> &PART,int particle_numb
 	int num=0;								//数えあげ変数
 	int face=CON->get_speed_face();			//3D解析時のspeed.datの出力面 0=YZ平面 1=XZ 2=XY
 	double face_p=CON->get_speed_face_p();	//3D解析時のspeed.datの出力面の座標
-	int d1,d2,d3;								//3D解析時の出力に必要な次元
+	int d1,d2,d3;							//3D解析時の出力に必要な次元
 	double xmax=-100;						//出力粒子の最大横座標
 	double ymax=-100;						//出力粒子の最大縦座標
 	
+
 	//AVS出力粒子数NUM計算
 	if(CON->get_speed_plot_particle()==1) NUM=particle_number;	//全粒子出力
 	else if(CON->get_speed_plot_particle()==2) NUM=fluid_number;//流体粒子のみ出力
@@ -2488,6 +2491,7 @@ void plot_speed_each(mpsconfig *CON ,vector<mpsparticle> &PART,int particle_numb
 		//int d1,d2;				//出力に必要な次元
 		if(face==0) {d1=A_Y; d2=A_Z; d3=A_X;}
 		else if(face==1) {d1=A_X; d2=A_Z; d3=A_Y;}
+		else if(face==2) {d1=A_X; d2=A_Y; d3=A_Z;}
 		if(CON->get_ax_sym_modify()==OFF)
 		{
 			for(int i=startID;i<NUM;i++)
@@ -2550,50 +2554,175 @@ void plot_speed_each(mpsconfig *CON ,vector<mpsparticle> &PART,int particle_numb
 	if(CON->get_legend_speed()>0) vec<<xmax<<" "<<ymax<<" "<<CON->get_legend_speed()*times<<" "<<0*times<<endl;//最後に凡例出力
 	vec.close();
 
-	xmax=-100;						//出力粒子の最大横座標
-	ymax=-100;						//出力粒子の最大縦座標
-	
+
 	if(t==1||t%CON->get_interval()==0)
 	{
-		/////////////断面での速度分布出力
-		char filename[20];
-		if(CON->get_model_number()==19&&CON->get_output_forward()==ON)
+		char filename[30];
+		char filename_n[30];
+		char filename_f[30];
+		char filename_b[30];
+		int facen=0;
+		int d1n,d2n,d3n;	
+		double shold_R=4.25e-3;
+		if(CON->get_tool_angle()>0)	
 		{
-			sprintf_s(filename,"speed_center%d.dat",t);
-			ofstream vec0(filename);
+			double	angle=CON->get_tool_angle();
+			shold_R*=cos(angle);
+		}
+		double ymax_n=-100,ymax_f=-100,ymax_b=-100;						//出力粒子の最大縦座標
+		double xmax_n=-100,xmax_f=-100,xmax_b=-100;
+		xmax=-100;
+		ymax=-100;
 
-			if(face==0) {d1=A_Y; d2=A_Z; d3=A_X;}
-			else if(face==1) {d1=A_X; d2=A_Z; d3=A_Y;}
-			else if(face==2)	{d1=A_X; d2=A_Y; d3=A_Z;}
-			if(CON->get_ax_sym_modify()==OFF)
+		if(face==0)
+		{
+			/*sprintf_s(filename,"speed_center_YZ%d.dat",t);
+			if(CON->get_output_another_face()==ON)
 			{
-				for(int i=startID;i<NUM;i++)
+				d1n=A_X; d2n=A_Z; d3n=A_Y;
+				facen=1;
+				sprintf_s(filename_n,"speed_center_XZ%d.dat",t);
+			}*/
+			if(CON->get_output_forward()==ON)	sprintf_s(filename_f,"speed_forward_YZ%d.dat",t);
+			if(CON->get_output_backward()==ON)	sprintf_s(filename_b,"speed_backward_YZ%d.dat",t);
+		}
+		else if(face==1)
+		{
+			/*sprintf_s(filename,"speed_center_XZ%d.dat",t);
+			if(CON->get_output_another_face()==ON)
+			{
+				d1n=A_Y; d2n=A_Z; d3n=A_X;
+				facen=0;
+				sprintf_s(filename_n,"speed_center_YZ%d.dat",t);
+			}*/
+			if(CON->get_output_forward()==ON)	sprintf_s(filename_f,"speed_forward_XZ%d.dat",t);
+			if(CON->get_output_backward()==ON)	sprintf_s(filename_b,"speed_backward_XZ%d.dat",t);
+		}
+		else if(face==2)
+		{
+			sprintf_s(filename_n,"speed_center_XY%d.dat",t);
+			if(CON->get_output_forward()==ON)	sprintf_s(filename_f,"speed_forward_XY%d.dat",t);
+			if(CON->get_output_backward()==ON)	sprintf_s(filename_b,"speed_backward_XY%d.dat",t);
+		}
+			
+		//ofstream vec0(filename);
+		//ofstream vec0n(filename_n);
+		ofstream vec2(filename_f);
+		ofstream vec3(filename_b);
+
+		
+		if(CON->get_ax_sym_modify()==OFF)
+		{
+			for(int i=startID;i<NUM;i++)
+			{
+				/*
+				if(PART[i].r[face]>face_p-le && PART[i].r[face]<face_p+le)
 				{
-					if(PART[i].r[face]>face_p-le && PART[i].r[face]<face_p+le)
+					double x=PART[i].r[d1];
+					double z=PART[i].r[d2];
+					double u=PART[i].u[d1];
+					double w=PART[i].u[d2];
+					vec0<<x<<" "<<z<<" "<<u*times<<" "<<w*times<<endl;
+					if(x>xmax) xmax=x;
+					if(z>ymax) ymax=z;
+				}
+
+				////////////////////another face
+				if(CON->get_output_another_face()==ON)
+				{
+					if(PART[i].r[facen]>face_p-le && PART[i].r[facen]<face_p+le)
+					{
+						double x=PART[i].r[d1n];
+						double z=PART[i].r[d2n];
+						double u=PART[i].u[d1n];
+						double w=PART[i].u[d2n];
+						vec0n<<x<<" "<<z<<" "<<u*times<<" "<<w*times<<endl;
+						if(x>xmax_n) xmax_n=x;
+						if(z>ymax_n) ymax_n=z;
+					}
+				}*/
+
+				////////////////////////forward face
+				if(CON->get_output_forward()==ON)
+				{
+					if(PART[i].r[face]>face_p-shold_R-le && PART[i].r[face]<face_p-shold_R+le)
 					{
 						double x=PART[i].r[d1];
 						double z=PART[i].r[d2];
 						double u=PART[i].u[d1];
 						double w=PART[i].u[d2];
-						vec0<<x<<" "<<z<<" "<<u*times<<" "<<w*times<<endl;
-						if(x>xmax) xmax=x;
-						if(z>ymax) ymax=z;
+						vec2<<x<<" "<<z<<" "<<u*times<<" "<<w*times<<endl;
+						if(x>xmax_f) xmax_f=x;
+						if(z>ymax_f) ymax_f=z;
+					}
+				}
+				///////////////////////backward face
+				if(CON->get_output_backward()==ON)
+				{
+					if(PART[i].r[face]>face_p+shold_R-le && PART[i].r[face]<face_p+shold_R+le)
+					{
+						double x=PART[i].r[d1];
+						double z=PART[i].r[d2];
+						double u=PART[i].u[d1];
+						double w=PART[i].u[d2];
+						vec3<<x<<" "<<z<<" "<<u*times<<" "<<w*times<<endl;
+						if(x>xmax_b) xmax_b=x;
+						if(z>ymax_b) ymax_b=z;
 					}
 				}
 			}
-			else if(CON->get_ax_sym_modify()==ON)
+		}
+		else if(CON->get_ax_sym_modify()==ON)
+		{
+			for(int i=startID;i<NUM;i++)
 			{
-				for(int i=startID;i<NUM;i++)
+				/*
+				if(PART[i].r[face]>face_p-le && PART[i].r[face]<face_p+le)
 				{
-					if(PART[i].r[face]>face_p-le && PART[i].r[face]<face_p+le)
-					{
-						double x=PART[i].r[d1];//出力に関与する軸 便宜上、変数名はxとなっているが、そうとは限らないことに注意
-						double z=PART[i].r[d2];//出力に関与する軸
-						double u=PART[i].u[d1];//出力に関与する軸
-						double w=PART[i].u[d2];//出力に関与する軸
+					double x=PART[i].r[d1];//出力に関与する軸 便宜上、変数名はxとなっているが、そうとは限らないことに注意
+					double z=PART[i].r[d2];//出力に関与する軸
+					double u=PART[i].u[d1];//出力に関与する軸
+					double w=PART[i].u[d2];//出力に関与する軸
 
-						double y=PART[i].r[d3];//出力に関与しない軸
-						double v=PART[i].u[d3];//出力に関与しない軸
+					double y=PART[i].r[d3];//出力に関与しない軸
+					double v=PART[i].u[d3];//出力に関与しない軸
+
+					double r=sqrt(x*x+y*y);//原点からの距離
+			
+					if(r>0)
+					{
+						double SIN,COS;
+						if(x>0)
+						{
+							SIN=-y/r;
+							COS=x/r;
+						}
+						if(x<0)
+						{
+							SIN=y/r;
+							COS=-x/r;
+						}
+						double x2=COS*x-SIN*y;//回転後の座標　欲しいのはx2のみ。y2はいらない
+						double u2=COS*u-SIN*v;//回転後の速度　欲しいのはu2のみ。v2はいらない
+						vec0<<x2<<" "<<z<<" "<<u2*times<<" "<<w*times<<endl;
+						//if(SIN*x+COS*y!=0) cout<<SIN*x+COS*y<<endl;
+						if(x2>xmax) xmax=x2;
+						if(z>ymax) ymax=z;
+					}
+					else vec0<<x<<" "<<z<<" "<<u*times<<" "<<w*times<<endl;
+				}
+
+				if(CON->get_output_another_face()==ON)
+				{
+					if(PART[i].r[facen]>face_p-le && PART[i].r[facen]<face_p+le)
+					{
+						double x=PART[i].r[d1n];//出力に関与する軸 便宜上、変数名はxとなっているが、そうとは限らないことに注意
+						double z=PART[i].r[d2n];//出力に関与する軸
+						double u=PART[i].u[d1n];//出力に関与する軸
+						double w=PART[i].u[d2n];//出力に関与する軸
+
+						double y=PART[i].r[d3n];//出力に関与しない軸
+						double v=PART[i].u[d3n];//出力に関与しない軸
 
 						double r=sqrt(x*x+y*y);//原点からの距離
 			
@@ -2612,60 +2741,15 @@ void plot_speed_each(mpsconfig *CON ,vector<mpsparticle> &PART,int particle_numb
 							}
 							double x2=COS*x-SIN*y;//回転後の座標　欲しいのはx2のみ。y2はいらない
 							double u2=COS*u-SIN*v;//回転後の速度　欲しいのはu2のみ。v2はいらない
-							vec0<<x2<<" "<<z<<" "<<u2*times<<" "<<w*times<<endl;
+							vec0n<<x2<<" "<<z<<" "<<u2*times<<" "<<w*times<<endl;
 							//if(SIN*x+COS*y!=0) cout<<SIN*x+COS*y<<endl;
-							if(x2>xmax) xmax=x2;
-							if(z>ymax) ymax=z;
+							if(x2>xmax_n) xmax_n=x2;
+							if(z>ymax_n) ymax_n=z;
 						}
-						else vec0<<x<<" "<<z<<" "<<u*times<<" "<<w*times<<endl;
+						else vec0n<<x<<" "<<z<<" "<<u*times<<" "<<w*times<<endl;
 					}
-				}
-			}
-			//凡例出力
-			xmax+=4*le;//凡例を出す位置を保険をかけて少し斜めに移動
-			ymax+=4*le;
-			if(CON->get_legend_speed()>0) vec0<<xmax<<" "<<ymax<<" "<<CON->get_legend_speed()*times<<" "<<0*times<<endl;//最後に凡例出力	
-			vec0.close();///////////////////
-		}
-
-
-
-
-
-		/////////各断面の速度分布出力２
-		double shold_R=6.0e-3;
-		if(CON->get_tool_angle()>0)	
-		{
-			double	angle=CON->get_tool_angle();
-			shold_R*=cos(angle);
-		}
-		if(CON->get_model_number()==19&&CON->get_output_forward()==ON)
-		{
-			sprintf_s(filename,"speed_forward%d.dat",t);
-			ofstream vec2(filename);
-
-			if(face==0) {d1=A_Y; d2=A_Z; d3=A_X;}
-			else if(face==1) {d1=A_X; d2=A_Z; d3=A_Y;}
-			else if(face==2)	{d1=A_X; d2=A_Y; d3=A_Z;}
-			if(CON->get_ax_sym_modify()==OFF)
-			{
-				for(int i=startID;i<NUM;i++)
-				{
-					if(PART[i].r[face]>face_p-shold_R-le && PART[i].r[face]<face_p-shold_R+le)
-					{
-						double x=PART[i].r[d1];
-						double z=PART[i].r[d2];
-						double u=PART[i].u[d1];
-						double w=PART[i].u[d2];
-						vec2<<x<<" "<<z<<" "<<u*times<<" "<<w*times<<endl;
-						if(x>xmax) xmax=x;
-						if(z>ymax) ymax=z;
-					}
-				}
-			}
-			else if(CON->get_ax_sym_modify()==ON)
-			{
-				for(int i=startID;i<NUM;i++)
+				}*/
+				if(CON->get_output_forward()==ON)
 				{
 					if(PART[i].r[face]>face_p-shold_R-le && PART[i].r[face]<face_p-shold_R+le)
 					{
@@ -2696,259 +2780,74 @@ void plot_speed_each(mpsconfig *CON ,vector<mpsparticle> &PART,int particle_numb
 							double u2=COS*u-SIN*v;//回転後の速度　欲しいのはu2のみ。v2はいらない
 							vec2<<x2<<" "<<z<<" "<<u2*times<<" "<<w*times<<endl;
 							//if(SIN*x+COS*y!=0) cout<<SIN*x+COS*y<<endl;
-							if(x2>xmax) xmax=x2;
-							if(z>ymax) ymax=z;
+							if(x2>xmax_f) xmax_f=x2;
+							if(z>ymax_f) ymax_f=z;
 						}
 						else vec2<<x<<" "<<z<<" "<<u*times<<" "<<w*times<<endl;
 					}
 				}
-			}
-			//凡例出力
-			xmax+=4*le;//凡例を出す位置を保険をかけて少し斜めに移動
-			ymax+=4*le;
-			if(CON->get_legend_speed()>0) vec2<<xmax<<" "<<ymax<<" "<<CON->get_legend_speed()*times<<" "<<0*times<<endl;//最後に凡例出力	
-			vec2.close();///////////////////
-		}
-
-		else
-		{
-			sprintf_s(filename,"speed%d.dat", t);
-			ofstream vec2(filename);
-			if(d==2)
-			{
-				for(int i=startID;i<NUM;i++)
+				if(CON->get_output_backward()==ON)
 				{
-					vec2<<PART[i].r[A_X]<<" "<<PART[i].r[A_Y]<<" "<<PART[i].u[A_X]*times<<" "<<PART[i].u[A_Y]*times<<endl;
-					if(PART[i].r[A_X]>xmax) xmax=PART[i].r[A_X];
-					if(PART[i].r[A_Y]>ymax) ymax=PART[i].r[A_Y];
-				}
-			}
-			else if(d==3)
-			{
-				//int d1,d2;				//出力に必要な次元
-				if(face==0) {d1=A_Y; d2=A_Z; d3=A_X;}
-				else if(face==1) {d1=A_X; d2=A_Z; d3=A_Y;}
-				else if(face==2)	{d1=A_X; d2=A_Y; d3=A_Z;}
-				if(CON->get_ax_sym_modify()==OFF)
-				{
-					for(int i=startID;i<NUM;i++)
+					if(PART[i].r[face]>face_p+shold_R-le && PART[i].r[face]<face_p+shold_R+le)
 					{
-						if(PART[i].r[face]>face_p-le && PART[i].r[face]<face_p+le)
-						{
-							double x=PART[i].r[d1];
-							double z=PART[i].r[d2];
-							double u=PART[i].u[d1];
-							double w=PART[i].u[d2];
-							vec2<<x<<" "<<z<<" "<<u*times<<" "<<w*times<<endl;
-							if(x>xmax) xmax=x;
-							if(z>ymax) ymax=z;
-						}
-					}
-				}
-				else if(CON->get_ax_sym_modify()==ON)
-				{
-					for(int i=startID;i<NUM;i++)
-					{
-						if(PART[i].r[face]>face_p-le && PART[i].r[face]<face_p+le)
-						{
-							double x=PART[i].r[d1];//出力に関与する軸 便宜上、変数名はxとなっているが、そうとは限らないことに注意
-							double z=PART[i].r[d2];//出力に関与する軸
-							double u=PART[i].u[d1];//出力に関与する軸
-							double w=PART[i].u[d2];//出力に関与する軸
+						double x=PART[i].r[d1];//出力に関与する軸 便宜上、変数名はxとなっているが、そうとは限らないことに注意
+						double z=PART[i].r[d2];//出力に関与する軸
+						double u=PART[i].u[d1];//出力に関与する軸
+						double w=PART[i].u[d2];//出力に関与する軸
 
-							double y=PART[i].r[d3];//出力に関与しない軸
-							double v=PART[i].u[d3];//出力に関与しない軸
+						double y=PART[i].r[d3];//出力に関与しない軸
+						double v=PART[i].u[d3];//出力に関与しない軸
 
-							double r=sqrt(x*x+y*y);//原点からの距離
+						double r=sqrt(x*x+y*y);//原点からの距離
 			
-							if(r>0)
+						if(r>0)
+						{
+							double SIN,COS;
+							if(x>0)
 							{
-								double SIN,COS;
-								if(x>0)
-								{
-									SIN=-y/r;
-									COS=x/r;
-								}
-								if(x<0)
-								{
-									SIN=y/r;
-									COS=-x/r;
-								}
-								double x2=COS*x-SIN*y;//回転後の座標　欲しいのはx2のみ。y2はいらない
-								double u2=COS*u-SIN*v;//回転後の速度　欲しいのはu2のみ。v2はいらない
-								vec2<<x2<<" "<<z<<" "<<u2*times<<" "<<w*times<<endl;
-								//if(SIN*x+COS*y!=0) cout<<SIN*x+COS*y<<endl;
-								if(x2>xmax) xmax=x2;
-								if(z>ymax) ymax=z;
+								SIN=-y/r;
+								COS=x/r;
 							}
-							else vec2<<x<<" "<<z<<" "<<u*times<<" "<<w*times<<endl;
+							if(x<0)
+							{
+								SIN=y/r;
+								COS=-x/r;
+							}
+							double x2=COS*x-SIN*y;//回転後の座標　欲しいのはx2のみ。y2はいらない
+							double u2=COS*u-SIN*v;//回転後の速度　欲しいのはu2のみ。v2はいらない
+							vec3<<x2<<" "<<z<<" "<<u2*times<<" "<<w*times<<endl;
+							//if(SIN*x+COS*y!=0) cout<<SIN*x+COS*y<<endl;
+							if(x2>xmax_b) xmax_b=x2;
+							if(z>ymax_b) ymax_b=z;
 						}
+						else vec3<<x<<" "<<z<<" "<<u*times<<" "<<w*times<<endl;
 					}
 				}
 			}
-			//凡例出力
-			xmax+=4*le;//凡例を出す位置を保険をかけて少し斜めに移動
-			ymax+=4*le;
-			if(CON->get_legend_speed()>0) vec2<<xmax<<" "<<ymax<<" "<<CON->get_legend_speed()*times<<" "<<0*times<<endl;//最後に凡例出力
-			vec2.close();///////////////////
 		}
+		//凡例出力
+/*		xmax+=4*le;//凡例を出す位置を保険をかけて少し斜めに移動
+		ymax+=4*le;
+		xmax_n+=4*le;//凡例を出す位置を保険をかけて少し斜めに移動
+		ymax_n+=4*le;*/
+		xmax_f+=4*le;//凡例を出す位置を保険をかけて少し斜めに移動
+		ymax_f+=4*le;
+		xmax_b+=4*le;//凡例を出す位置を保険をかけて少し斜めに移動
+		ymax_b+=4*le;
 
-		////////////各断面での速度分布出力３
-		if(CON->get_model_number()==19&&CON->get_process_type()==0)
+		if(CON->get_legend_speed()>0)
 		{
-			sprintf_s(filename,"speed_backward%d.dat",t);
-			ofstream	vec3(filename);
-
-				//int d1,d2;				//出力に必要な次元
-				if(face==0) {d1=A_Y; d2=A_Z; d3=A_X;}
-				else if(face==1) {d1=A_X; d2=A_Z; d3=A_Y;}
-				if(CON->get_ax_sym_modify()==OFF)
-				{
-					for(int i=startID;i<NUM;i++)
-					{
-						if(PART[i].r[face]>face_p+shold_R-le && PART[i].r[face]<face_p+shold_R+le)
-						{
-							double x=PART[i].r[d1];
-							double z=PART[i].r[d2];
-							double u=PART[i].u[d1];
-							double w=PART[i].u[d2];
-							vec3<<x<<" "<<z<<" "<<u*times<<" "<<w*times<<endl;
-							if(x>xmax) xmax=x;
-							if(z>ymax) ymax=z;
-						}
-					}
-				}
-				else if(CON->get_ax_sym_modify()==ON)
-				{
-					for(int i=startID;i<NUM;i++)
-					{
-						if(PART[i].r[face]>face_p+shold_R-le && PART[i].r[face]<face_p+shold_R+le)
-						{
-							double x=PART[i].r[d1];//出力に関与する軸 便宜上、変数名はxとなっているが、そうとは限らないことに注意
-							double z=PART[i].r[d2];//出力に関与する軸
-							double u=PART[i].u[d1];//出力に関与する軸
-							double w=PART[i].u[d2];//出力に関与する軸
-
-							double y=PART[i].r[d3];//出力に関与しない軸
-							double v=PART[i].u[d3];//出力に関与しない軸
-
-							double r=sqrt(x*x+y*y);//原点からの距離
-			
-							if(r>0)
-							{
-								double SIN,COS;
-								if(x>0)
-								{
-									SIN=-y/r;
-									COS=x/r;
-								}
-								if(x<0)
-								{
-									SIN=y/r;
-									COS=-x/r;
-								}
-								double x2=COS*x-SIN*y;//回転後の座標　欲しいのはx2のみ。y2はいらない
-								double u2=COS*u-SIN*v;//回転後の速度　欲しいのはu2のみ。v2はいらない
-								vec3<<x2<<" "<<z<<" "<<u2*times<<" "<<w*times<<endl;
-								//if(SIN*x+COS*y!=0) cout<<SIN*x+COS*y<<endl;
-								if(x2>xmax) xmax=x2;
-								if(z>ymax) ymax=z;
-							}
-							else vec3<<x<<" "<<z<<" "<<u*times<<" "<<w*times<<endl;
-						}
-					}
-				}
-			//凡例出力
-			xmax+=4*le;//凡例を出す位置を保険をかけて少し斜めに移動
-			ymax+=4*le;
-			if(CON->get_legend_speed()>0) vec3<<xmax<<" "<<ymax<<" "<<CON->get_legend_speed()*times<<" "<<0*times<<endl;//最後に凡例出力	
-			vec3.close();///////////////////
+/*			vec0<<xmax<<" "<<ymax<<" "<<CON->get_legend_speed()*times<<" "<<0*times<<endl;//最後に凡例出力	
+			vec0n<<xmax_n<<" "<<ymax_n<<" "<<CON->get_legend_speed()*times<<" "<<0*times<<endl;*/
+			vec2<<xmax_f<<" "<<ymax_f<<" "<<CON->get_legend_speed()*times<<" "<<0*times<<endl;
+			vec3<<xmax_b<<" "<<ymax_b<<" "<<CON->get_legend_speed()*times<<" "<<0*times<<endl;
 		}
-
-		else
-		{
-			sprintf_s(filename,"speedn%d.dat", t);
-			ofstream vec3(filename);
-			if(d==2)
-			{
-				for(int i=startID;i<NUM;i++)
-				{
-					vec3<<PART[i].r[A_X]<<" "<<PART[i].r[A_Y]<<" "<<PART[i].u[A_X]*times<<" "<<PART[i].u[A_Y]*times<<endl;
-					if(PART[i].r[A_X]>xmax) xmax=PART[i].r[A_X];
-					if(PART[i].r[A_Y]>ymax) ymax=PART[i].r[A_Y];
-				}
-			}
-			else if(d==3)
-			{
-				//int d1,d2;				//出力に必要な次元
-				if(face==0) {d1=A_Y; d2=A_Z; d3=A_X;}
-				else if(face==1) {d1=A_X; d2=A_Z; d3=A_Y;}
-				if(CON->get_ax_sym_modify()==OFF)
-				{
-					for(int i=startID;i<NUM;i++)
-					{
-						if(PART[i].r[face]>face_p-le && PART[i].r[face]<face_p+le)
-						{
-							double x=PART[i].r[d1];
-							double z=PART[i].r[d2];
-							double u=PART[i].u[d1];
-							double w=PART[i].u[d2];
-							vec3<<x<<" "<<z<<" "<<u*times<<" "<<w*times<<endl;
-							if(x>xmax) xmax=x;
-							if(z>ymax) ymax=z;
-						}
-					}
-				}
-				else if(CON->get_ax_sym_modify()==ON)
-				{
-					for(int i=startID;i<NUM;i++)
-					{
-						if(PART[i].r[face]>face_p-le && PART[i].r[face]<face_p+le)
-						{
-							double x=PART[i].r[d1];//出力に関与する軸 便宜上、変数名はxとなっているが、そうとは限らないことに注意
-							double z=PART[i].r[d2];//出力に関与する軸
-							double u=PART[i].u[d1];//出力に関与する軸
-							double w=PART[i].u[d2];//出力に関与する軸
-
-							double y=PART[i].r[d3];//出力に関与しない軸
-							double v=PART[i].u[d3];//出力に関与しない軸
-
-							double r=sqrt(x*x+y*y);//原点からの距離
-			
-							if(r>0)
-							{
-								double SIN,COS;
-								if(x>0)
-								{
-									SIN=-y/r;
-									COS=x/r;
-								}
-								if(x<0)
-								{
-									SIN=y/r;
-									COS=-x/r;
-								}
-								double x2=COS*x-SIN*y;//回転後の座標　欲しいのはx2のみ。y2はいらない
-								double u2=COS*u-SIN*v;//回転後の速度　欲しいのはu2のみ。v2はいらない
-								vec3<<x2<<" "<<z<<" "<<u2*times<<" "<<w*times<<endl;
-								//if(SIN*x+COS*y!=0) cout<<SIN*x+COS*y<<endl;
-								if(x2>xmax) xmax=x2;
-								if(z>ymax) ymax=z;
-							}
-							else vec3<<x<<" "<<z<<" "<<u*times<<" "<<w*times<<endl;
-						}
-					}
-				}
-			}
-			//凡例出力
-			xmax+=4*le;//凡例を出す位置を保険をかけて少し斜めに移動
-			ymax+=4*le;
-			if(CON->get_legend_speed()>0) vec3<<xmax<<" "<<ymax<<" "<<CON->get_legend_speed()*times<<" "<<0*times<<endl;//最後に凡例出力
-			vec3.close();///////////////////
-		}
-		/////////////////////////////
+/*		vec0.close();///////////////////
+		vec0n.close();*/
+		vec2.close();
+		vec3.close();
 	}
-}
+}	
 
 
 void plot_F(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_number,double *F[DIMENTION],int t)
@@ -6168,24 +6067,64 @@ void calc_vis_value(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_number,do
 void output_viscousity_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int particle_number,int fluid_number)
 {
 	char filename[30];
-	int n=0;
+	char filename_n[30];
+	char filename_f[30];
+	char filename_b[30];
+	int n=0,nn=0,nf=0,nb=0;
+
 	double le=CON->get_distancebp();
 	double cross_section=CON->get_speed_face_p();
-	int output_face=CON->get_output_viscousity_face();
+	int output_face=CON->get_speed_face();
+	int output_face_n=0;
+
+	double shold_R=4.25*1e-3;
+	if(CON->get_tool_angle()>0)	
+	{
+		double	angle=CON->get_tool_angle();
+		shold_R*=cos(angle);
+	}
+
 	//t=1;//いまはわざと毎ステップ上書き
-	/*
+	
 	//sprintf_s(filename,"pressure/pressure%d",t);//フォルダを作成して管理する場合はこちら
-	if(cross_section==0)	sprintf_s(filename,"vis_XZ%d",t);//他のファイルと同じ階層に生成するならこちら
-	else if(cross_section==1)	sprintf_s(filename,"vis_YZ%d",t);
-	else if(cross_section==2)	sprintf_s(filename,"vis_XY%d",t);
+	if(output_face==0)
+	{
+		sprintf_s(filename,"vis_YZ%d",t);//他のファイルと同じ階層に生成するならこちら
+		if(CON->get_output_another_face()==ON)
+		{
+			sprintf_s(filename_n,"vis_XZ%d",t);
+			output_face_n=1;
+		}
+		if(CON->get_output_forward()==ON)	sprintf_s(filename_f,"vis_YZ_forward%d",t);
+		if(CON->get_output_backward()==ON)	sprintf_s(filename_b,"vis_YZ_backward%d",t);
+	}
+	else if(output_face==1)
+	{
+		sprintf_s(filename,"vis_XZ%d",t);
+		if(CON->get_output_another_face()==ON)
+		{
+			sprintf_s(filename_n,"vis_YZ%d",t);
+			output_face_n=0;
+		}
+		if(CON->get_output_forward()==ON)	sprintf_s(filename_f,"vis_XZ_forward%d",t);
+		if(CON->get_output_backward()==ON)	sprintf_s(filename_b,"vis_XZ_backward%d",t);
+	}
+	else if(output_face==2)
+	{
+		sprintf_s(filename,"vis_XY%d",t);
+		if(CON->get_output_forward()==ON)	sprintf_s(filename_f,"vis_XY_forward%d",t);
+		if(CON->get_output_backward()==ON)	sprintf_s(filename_b,"vis_XY_backward%d",t);
+	}
 
 	ofstream fout(filename);
+	ofstream	fout_n(filename_n);
+	ofstream	fout_f(filename_f);
+	ofstream	fout_b(filename_b);
 	if(!fout)
 	{
 		cout << "cannot open" << filename << endl;
 		exit(EXIT_FAILURE);
 	}
-
 
 	if(CON->get_dimention()==3)
 	{
@@ -6203,6 +6142,48 @@ void output_viscousity_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int pa
 					fout << P << "\t" << x << "\t" << y << "\t" << z << endl;
 					n++;
 				}
+
+				if(CON->get_output_another_face()==ON)
+				{
+					if(PART[i].r[output_face_n]<cross_section+0.5*le && PART[i].r[output_face_n]>cross_section-0.5*le)	
+					//if(PART[i].r[A_Y]<0.006+0.5*le && PART[i].r[A_Y]>0.006-0.5*le)	
+					{
+						double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
+						double y=PART[i].r[A_Y]*1.0E+05;
+						double z=PART[i].r[A_Z]*1.0E+05;
+						double P=PART[i].vis;
+						fout_n << P << "\t" << x << "\t" << y << "\t" << z << endl;
+						nn++;
+					}
+				}
+
+				if(CON->get_output_forward()==ON)
+				{
+					if(PART[i].r[output_face]<cross_section-shold_R+0.5*le && PART[i].r[output_face]>cross_section-shold_R-0.5*le)	
+					//if(PART[i].r[A_Y]<0.006+0.5*le && PART[i].r[A_Y]>0.006-0.5*le)	
+					{
+						double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
+						double y=PART[i].r[A_Y]*1.0E+05;
+						double z=PART[i].r[A_Z]*1.0E+05;
+						double P=PART[i].vis;
+						fout_f << P << "\t" << x << "\t" << y << "\t" << z << endl;
+						nf++;
+					}
+				}
+
+				if(CON->get_output_backward()==ON)
+				{
+					if(PART[i].r[output_face]<cross_section+shold_R+0.5*le && PART[i].r[output_face]>cross_section+shold_R-0.5*le)	
+					//if(PART[i].r[A_Y]<0.006+0.5*le && PART[i].r[A_Y]>0.006-0.5*le)	
+					{
+						double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
+						double y=PART[i].r[A_Y]*1.0E+05;
+						double z=PART[i].r[A_Z]*1.0E+05;
+						double P=PART[i].vis;
+						fout_b << P << "\t" << x << "\t" << y << "\t" << z << endl;
+						nb++;
+					}
+				}
 			}
 		}
 	}
@@ -6212,26 +6193,52 @@ void output_viscousity_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int pa
 		{
 			if(PART[i].type!=FLUID)
 			{
-			double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
-			double y=PART[i].r[A_Y]*1.0E+05;
-			double z=PART[i].r[A_Z]*1.0E+05;
+				double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
+				double y=PART[i].r[A_Y]*1.0E+05;
+				double z=PART[i].r[A_Z]*1.0E+05;
 
-			//double x=PART[i].r[A_X];//*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
-			//double y=PART[i].r[A_Y];//*1.0E+05;
-			//double z=PART[i].r[A_Z];//*1.0E+05;
-			double P=PART[i].vis;
-			//double P=PART[i].heat_gene_before1;
-			fout << P << "\t" << x << "\t" << y << "\t" << z << endl;
-			n++;
-		}
+				//double x=PART[i].r[A_X];//*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
+				//double y=PART[i].r[A_Y];//*1.0E+05;
+				//double z=PART[i].r[A_Z];//*1.0E+05;
+				double P=PART[i].vis;
+				//double P=PART[i].heat_gene_before1;
+				fout << P << "\t" << x << "\t" << y << "\t" << z << endl;
+				n++;
+			}
 		}
 	}
 	fout.close();
+	fout_n.close();
+	fout_b.close();
+	fout_f.close();
+
+
 	//sprintf_s(filename,"pressure/pressure%d.fld",t);//フォルダを作成して管理する場合はこちら
-	if(cross_section==0)	sprintf_s(filename,"vis_XZ%d.fld",t);//他のファイルと同じ階層に生成するならこちら
-	else if(cross_section==1)	sprintf_s(filename,"vis_YZ%d.fld",t);
-	else if(cross_section==2)	sprintf_s(filename,"vis_XY%d.fld",t);
+	if(output_face==0)
+	{
+		sprintf_s(filename,"vis_YZ%d.fld",t);//他のファイルと同じ階層に生成するならこちら
+		if(CON->get_output_another_face()==ON)	sprintf_s(filename_n,"vis_XZ%d.fld",t);
+		if(CON->get_output_forward()==ON)	sprintf_s(filename_f,"vis_YZ_forward%d.fld",t);
+		if(CON->get_output_backward()==ON)	sprintf_s(filename_b,"vis_YZ_backward%d.fld",t);
+	}
+	else if(output_face==1)
+	{
+		sprintf_s(filename,"vis_XZ%d.fld",t);
+		if(CON->get_output_another_face()==ON)	sprintf_s(filename_n,"vis_YZ%d.fld",t);
+		if(CON->get_output_forward()==ON)	sprintf_s(filename_f,"vis_XZ_forward%d.fld",t);
+		if(CON->get_output_backward()==ON)	sprintf_s(filename_b,"vis_XZ_backward%d.fld",t);
+	}
+	else if(output_face==2)
+	{
+		sprintf_s(filename,"vis_XY%d.fld",t);
+		if(CON->get_output_forward()==ON)	sprintf_s(filename_f,"vis_XY_forward%d.fld",t);
+		if(CON->get_output_backward()==ON)	sprintf_s(filename_b,"vis_XY_backward%d.fld",t);
+	}
+
 	ofstream fout2(filename);
+	ofstream fout_n2(filename_n);
+	ofstream fout_f2(filename_f);
+	ofstream fout_b2(filename_b);
 	if(!fout2)
 	{
 		cout << "cannot open" << filename << endl;
@@ -6250,152 +6257,139 @@ void output_viscousity_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int pa
 	//fout2 << "coord    1 file=./pressure" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//フォルダを作成して管理する場合はこちら
 	//fout2 << "coord    2 file=./pressure" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//フォルダを作成して管理する場合はこちら
 	//fout2 << "coord    3 file=./pressure" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//フォルダを作成して管理する場合はこちら
-	fout2 << "variable 1 file=vis_XZ" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
-	fout2 << "coord    1 file=vis_XZ" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
-	fout2 << "coord    2 file=vis_XZ" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
-	fout2 << "coord    3 file=vis_XZ" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
-	fout2.close();*/
 
-
-	if(CON->get_model_number()==19&&CON->get_output_forward()==ON)
+	if(output_face==0)
 	{
-		double shold_R=6*1e-3;
-		if(CON->get_tool_angle()>0)	
+		fout2 << "variable 1 file=vis_YZ" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		fout2 << "coord    1 file=vis_YZ" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		fout2 << "coord    2 file=vis_YZ" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		fout2 << "coord    3 file=vis_YZ" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+	}
+	if(output_face==1)
+	{
+		fout2 << "variable 1 file=vis_XZ" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		fout2 << "coord    1 file=vis_XZ" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		fout2 << "coord    2 file=vis_XZ" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		fout2 << "coord    3 file=vis_XZ" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+	}
+	if(output_face==2)
+	{
+		fout2 << "variable 1 file=vis_XY" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		fout2 << "coord    1 file=vis_XY" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		fout2 << "coord    2 file=vis_XY" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		fout2 << "coord    3 file=vis_XY" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+	}
+	fout2.close();
+
+	///////////////////粘性分布出力_他断面
+	if(CON->get_output_another_face()==ON)
+	{
+		fout_n2 << "# AVS field file" << endl;
+		fout_n2 << "ndim=1" << endl;
+		fout_n2 << "dim1=" << nn <<endl;
+		fout_n2 << "nspace=3" << endl;
+		fout_n2 << "veclen=1" << endl;
+		fout_n2 << "data=float" << endl;
+		fout_n2 << "field=irregular" << endl;
+		fout_n2 << "label=viscousity" << endl << endl;
+		//fout2n << "variable 1 file=./pressure" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//フォルダを作成して管理する場合はこちら
+		//fout2n << "coord    1 file=./pressure" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//フォルダを作成して管理する場合はこちら
+		//fout2n << "coord    2 file=./pressure" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//フォルダを作成して管理する場合はこちら
+		//fout2n << "coord    3 file=./pressure" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//フォルダを作成して管理する場合はこちら
+		if(output_face_n==0)
 		{
-			double	angle=CON->get_tool_angle();
-			shold_R*=cos(angle);
+			fout_n2 << "variable 1 file=vis_YZ" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_n2 << "coord    1 file=vis_YZ" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_n2 << "coord    2 file=vis_YZ" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_n2 << "coord    3 file=vis_YZ" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
 		}
-
-		if(cross_section==0)	sprintf_s(filename,"vis_XZ_forward%d",t);//他のファイルと同じ階層に生成するならこちら
-		else if(cross_section==1)	sprintf_s(filename,"vis_YZ_forward%d",t);
-		else if(cross_section==2)	sprintf_s(filename,"vis_XY_forward%d",t);
-
-		ofstream fout(filename);
-		if(!fout)
+		if(output_face_n==1)
 		{
-			cout << "cannot open" << filename << endl;
-			exit(EXIT_FAILURE);
+			fout_n2 << "variable 1 file=vis_XZ" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_n2 << "coord    1 file=vis_XZ" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_n2 << "coord    2 file=vis_XZ" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_n2 << "coord    3 file=vis_XZ" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
 		}
+		fout_n2.close();
+	}
 
-		for(int i=0;i<particle_number;i++)
-		{
-			if(PART[i].type==FLUID)
-			{
-				if(PART[i].r[output_face]<cross_section-shold_R+0.5*le && PART[i].r[output_face]>cross_section-shold_R-0.5*le)	
-				//if(PART[i].r[A_Y]<0.006+0.5*le && PART[i].r[A_Y]>0.006-0.5*le)	
-				{
-					double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
-					double y=PART[i].r[A_Y]*1.0E+05;
-					double z=PART[i].r[A_Z]*1.0E+05;
-					double P=PART[i].vis;
-					fout << P << "\t" << x << "\t" << y << "\t" << z << endl;
-					n++;
-				}
-			}
-		}
-
-		fout.close();
-		//sprintf_s(filename,"pressure/pressure%d.fld",t);//フォルダを作成して管理する場合はこちら
-
-		if(cross_section==0)	sprintf_s(filename,"vis_XZ_forward%d.fld",t);//他のファイルと同じ階層に生成するならこちら
-		else if(cross_section==1)	sprintf_s(filename,"vis_YZ_forward%d.fld",t);
-		else if(cross_section==2)	sprintf_s(filename,"vis_XY_forward%d.fld",t);
-		ofstream fout2(filename);
-		if(!fout2)
-		{
-			cout << "cannot open" << filename << endl;
-			exit(EXIT_FAILURE);
-		}
-
-		fout2 << "# AVS field file" << endl;
-		fout2 << "ndim=1" << endl;
-		fout2 << "dim1=" << n <<endl;
-		fout2 << "nspace=3" << endl;
-		fout2 << "veclen=1" << endl;
-		fout2 << "data=float" << endl;
-		fout2 << "field=irregular" << endl;
-		fout2 << "label=viscousity" << endl << endl;
+	////////////////粘性分布出力_前方
+	if(CON->get_output_forward()==ON)
+	{
+		fout_f2 << "# AVS field file" << endl;
+		fout_f2 << "ndim=1" << endl;
+		fout_f2 << "dim1=" << nf <<endl;
+		fout_f2 << "nspace=3" << endl;
+		fout_f2 << "veclen=1" << endl;
+		fout_f2 << "data=float" << endl;
+		fout_f2 << "field=irregular" << endl;
+		fout_f2 << "label=viscousity" << endl << endl;
 		//fout2 << "variable 1 file=./pressure" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//フォルダを作成して管理する場合はこちら
 		//fout2 << "coord    1 file=./pressure" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//フォルダを作成して管理する場合はこちら
 		//fout2 << "coord    2 file=./pressure" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//フォルダを作成して管理する場合はこちら
 		//fout2 << "coord    3 file=./pressure" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//フォルダを作成して管理する場合はこちら
-		fout2 << "variable 1 file=vis_XZ_forward" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
-		fout2 << "coord    1 file=vis_XZ_forward" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
-		fout2 << "coord    2 file=vis_XZ_forward" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
-		fout2 << "coord    3 file=vis_XZ_forward" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
-		fout2.close();
+		if(output_face==0)
+		{
+			fout_f2 << "variable 1 file=vis_YZ_forward" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_f2 << "coord    1 file=vis_YZ_forward" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_f2 << "coord    2 file=vis_YZ_forward" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_f2 << "coord    3 file=vis_YZ_forward" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		}
+		else if(output_face==1)
+		{
+			fout_f2 << "variable 1 file=vis_XZ_forward" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_f2 << "coord    1 file=vis_XZ_forward" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_f2 << "coord    2 file=vis_XZ_forward" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_f2 << "coord    3 file=vis_XZ_forward" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		}
+		else if(output_face==2)
+		{
+			fout_f2 << "variable 1 file=vis_XY_forward" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_f2 << "coord    1 file=vis_XY_forward" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_f2 << "coord    2 file=vis_XY_forward" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_f2 << "coord    3 file=vis_XY_forward" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		}
+		fout_f2.close();
 	}
 
-	if(CON->get_model_number()==19&&CON->get_output_backward()==ON)
+	////////////温度分布出力＿後方
+	if(CON->get_output_backward()==ON)
 	{
-		double shold_R=6*1e-3;
-		if(CON->get_tool_angle()>0)	
-		{
-			double	angle=CON->get_tool_angle();
-			shold_R*=cos(angle);
-		}
-
-		if(cross_section==0)	sprintf_s(filename,"vis_XZ_backward%d",t);//他のファイルと同じ階層に生成するならこちら
-		else if(cross_section==1)	sprintf_s(filename,"vis_YZ_backward%d",t);
-		else if(cross_section==2)	sprintf_s(filename,"vis_XY_backward%d",t);
-
-		ofstream fout(filename);
-		if(!fout)
-		{
-			cout << "cannot open" << filename << endl;
-			exit(EXIT_FAILURE);
-		}
-
-		for(int i=0;i<particle_number;i++)
-		{
-			if(PART[i].type==FLUID)
-			{
-				if(PART[i].r[output_face]<cross_section+shold_R+0.5*le && PART[i].r[output_face]>cross_section+shold_R-0.5*le)	
-				//if(PART[i].r[A_Y]<0.006+0.5*le && PART[i].r[A_Y]>0.006-0.5*le)	
-				{
-					double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
-					double y=PART[i].r[A_Y]*1.0E+05;
-					double z=PART[i].r[A_Z]*1.0E+05;
-					double P=PART[i].vis;
-					fout << P << "\t" << x << "\t" << y << "\t" << z << endl;
-					n++;
-				}
-			}
-		}
-
-		fout.close();
-		//sprintf_s(filename,"pressure/pressure%d.fld",t);//フォルダを作成して管理する場合はこちら
-
-		if(cross_section==0)	sprintf_s(filename,"vis_XZ_backward%d.fld",t);//他のファイルと同じ階層に生成するならこちら
-		else if(cross_section==1)	sprintf_s(filename,"vis_YZ_backward%d.fld",t);
-		else if(cross_section==2)	sprintf_s(filename,"vis_XY_backward%d.fld",t);
-		ofstream fout2(filename);
-		if(!fout2)
-		{
-			cout << "cannot open" << filename << endl;
-			exit(EXIT_FAILURE);
-		}
-
-		fout2 << "# AVS field file" << endl;
-		fout2 << "ndim=1" << endl;
-		fout2 << "dim1=" << n <<endl;
-		fout2 << "nspace=3" << endl;
-		fout2 << "veclen=1" << endl;
-		fout2 << "data=float" << endl;
-		fout2 << "field=irregular" << endl;
-		fout2 << "label=viscousity" << endl << endl;
+		fout_b2 << "# AVS field file" << endl;
+		fout_b2 << "ndim=1" << endl;
+		fout_b2 << "dim1=" << nb <<endl;
+		fout_b2 << "nspace=3" << endl;
+		fout_b2 << "veclen=1" << endl;
+		fout_b2 << "data=float" << endl;
+		fout_b2 << "field=irregular" << endl;
+		fout_b2 << "label=viscousity" << endl << endl;
 		//fout2 << "variable 1 file=./pressure" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//フォルダを作成して管理する場合はこちら
 		//fout2 << "coord    1 file=./pressure" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//フォルダを作成して管理する場合はこちら
 		//fout2 << "coord    2 file=./pressure" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//フォルダを作成して管理する場合はこちら
 		//fout2 << "coord    3 file=./pressure" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//フォルダを作成して管理する場合はこちら
-		fout2 << "variable 1 file=vis_XZ_backward" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
-		fout2 << "coord    1 file=vis_XZ_backward" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
-		fout2 << "coord    2 file=vis_XZ_backward" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
-		fout2 << "coord    3 file=vis_XZ_backward" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
-		fout2.close();
+		if(output_face==0)
+		{
+			fout_b2 << "variable 1 file=vis_YZ_backward" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_b2 << "coord    1 file=vis_YZ_backward" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_b2 << "coord    2 file=vis_YZ_backward" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_b2 << "coord    3 file=vis_YZ_backward" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		}
+		else if(output_face==1)
+		{
+			fout_b2 << "variable 1 file=vis_XZ_backward" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_b2 << "coord    1 file=vis_XZ_backward" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_b2 << "coord    2 file=vis_XZ_backward" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_b2 << "coord    3 file=vis_XZ_backward" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		}
+		else if(output_face==2)
+		{
+			fout_b2 << "variable 1 file=vis_XY_backward" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_b2 << "coord    1 file=vis_XY_backward" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_b2 << "coord    2 file=vis_XY_backward" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_b2 << "coord    3 file=vis_XY_backward" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		}
+		fout_b2.close();
 	}
-
-
 }
 
 //相当ひずみ率AVS出力関数
@@ -6419,7 +6413,6 @@ void output_equivalent_strain_rate_avs(mpsconfig *CON,vector<mpsparticle> &PART,
 		cout << "cannot open" << filename << endl;
 		exit(EXIT_FAILURE);
 	}
-
 
 	if(CON->get_dimention()==3)
 	{
@@ -6484,151 +6477,152 @@ void output_equivalent_strain_rate_avs(mpsconfig *CON,vector<mpsparticle> &PART,
 	//fout2 << "coord    1 file=./pressure" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//フォルダを作成して管理する場合はこちら
 	//fout2 << "coord    2 file=./pressure" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//フォルダを作成して管理する場合はこちら
 	//fout2 << "coord    3 file=./pressure" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//フォルダを作成して管理する場合はこちら
-	fout2 << "variable 1 file=ep_XZ" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
-	fout2 << "coord    1 file=ep_XZ" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
-	fout2 << "coord    2 file=ep_XZ" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
-	fout2 << "coord    3 file=ep_XZ" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+	if(cross_section==0)
+	{
+		fout2 << "variable 1 file=ep_YZ" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		fout2 << "coord    1 file=ep_YZ" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		fout2 << "coord    2 file=ep_YZ" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		fout2 << "coord    3 file=ep_YZ" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+	}
+	if(cross_section==1)
+	{
+		fout2 << "variable 1 file=ep_XZ" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		fout2 << "coord    1 file=ep_XZ" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		fout2 << "coord    2 file=ep_XZ" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		fout2 << "coord    3 file=ep_XZ" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+	}
+	if(cross_section==2)
+	{
+		fout2 << "variable 1 file=ep_XY" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		fout2 << "coord    1 file=ep_XY" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		fout2 << "coord    2 file=ep_XY" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		fout2 << "coord    3 file=ep_XY" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+	}
 	fout2.close();
-
-	if(CON->get_model_number()==19&&CON->get_output_forward()==ON)
-	{
-		double shold_R=6*1e-3;
-		if(CON->get_tool_angle()>0)	
-		{
-			double	angle=CON->get_tool_angle();
-			shold_R*=cos(angle);
-		}
-
-		if(cross_section==0)	sprintf_s(filename,"ep_XZ_forward%d",t);//他のファイルと同じ階層に生成するならこちら
-		else if(cross_section==1)	sprintf_s(filename,"ep_YZ_forward%d",t);
-		else if(cross_section==2)	sprintf_s(filename,"ep_XY_forward%d",t);
-
-		ofstream fout(filename);
-		if(!fout)
-		{
-			cout << "cannot open" << filename << endl;
-			exit(EXIT_FAILURE);
-		}
-
-		for(int i=0;i<particle_number;i++)
-		{
-			if(PART[i].type==FLUID)
-			{
-				if(PART[i].r[output_face]<cross_section-shold_R+0.5*le && PART[i].r[output_face]>cross_section-shold_R-0.5*le)	
-				//if(PART[i].r[A_Y]<0.006+0.5*le && PART[i].r[A_Y]>0.006-0.5*le)	
-				{
-					double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
-					double y=PART[i].r[A_Y]*1.0E+05;
-					double z=PART[i].r[A_Z]*1.0E+05;
-					double P=PART[i].ep;
-					fout << P << "\t" << x << "\t" << y << "\t" << z << endl;
-					n++;
-				}
-			}
-		}
-
-		fout.close();
-		//sprintf_s(filename,"pressure/pressure%d.fld",t);//フォルダを作成して管理する場合はこちら
-
-		if(cross_section==0)	sprintf_s(filename,"ep_XZ_forward%d.fld",t);//他のファイルと同じ階層に生成するならこちら
-		else if(cross_section==1)	sprintf_s(filename,"ep_YZ_forward%d.fld",t);
-		else if(cross_section==2)	sprintf_s(filename,"ep_XY_forward%d.fld",t);
-		ofstream fout2(filename);
-		if(!fout2)
-		{
-			cout << "cannot open" << filename << endl;
-			exit(EXIT_FAILURE);
-		}
-
-		fout2 << "# AVS field file" << endl;
-		fout2 << "ndim=1" << endl;
-		fout2 << "dim1=" << n <<endl;
-		fout2 << "nspace=3" << endl;
-		fout2 << "veclen=1" << endl;
-		fout2 << "data=float" << endl;
-		fout2 << "field=irregular" << endl;
-		fout2 << "label=equivalent_strain_rate" << endl << endl;
-		//fout2 << "variable 1 file=./pressure" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//フォルダを作成して管理する場合はこちら
-		//fout2 << "coord    1 file=./pressure" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//フォルダを作成して管理する場合はこちら
-		//fout2 << "coord    2 file=./pressure" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//フォルダを作成して管理する場合はこちら
-		//fout2 << "coord    3 file=./pressure" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//フォルダを作成して管理する場合はこちら
-		fout2 << "variable 1 file=ep_XZ_forward" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
-		fout2 << "coord    1 file=ep_XZ_forward" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
-		fout2 << "coord    2 file=ep_XZ_forward" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
-		fout2 << "coord    3 file=ep_XZ_forward" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
-		fout2.close();
-	}
-
-	if(CON->get_model_number()==19&&CON->get_output_backward()==ON)
-	{
-		double shold_R=6*1e-3;
-		if(CON->get_tool_angle()>0)	
-		{
-			double	angle=CON->get_tool_angle();
-			shold_R*=cos(angle);
-		}
-
-		if(cross_section==0)	sprintf_s(filename,"ep_XZ_backward%d",t);//他のファイルと同じ階層に生成するならこちら
-		else if(cross_section==1)	sprintf_s(filename,"ep_YZ_backward%d",t);
-		else if(cross_section==2)	sprintf_s(filename,"ep_XY_backward%d",t);
-
-		ofstream fout(filename);
-		if(!fout)
-		{
-			cout << "cannot open" << filename << endl;
-			exit(EXIT_FAILURE);
-		}
-
-		for(int i=0;i<particle_number;i++)
-		{
-			if(PART[i].type==FLUID)
-			{
-				if(PART[i].r[output_face]<cross_section+shold_R+0.5*le && PART[i].r[output_face]>cross_section+shold_R-0.5*le)	
-				//if(PART[i].r[A_Y]<0.006+0.5*le && PART[i].r[A_Y]>0.006-0.5*le)	
-				{
-					double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
-					double y=PART[i].r[A_Y]*1.0E+05;
-					double z=PART[i].r[A_Z]*1.0E+05;
-					double P=PART[i].ep;
-					fout << P << "\t" << x << "\t" << y << "\t" << z << endl;
-					n++;
-				}
-			}
-		}
-
-		fout.close();
-		//sprintf_s(filename,"pressure/pressure%d.fld",t);//フォルダを作成して管理する場合はこちら
-
-		if(cross_section==0)	sprintf_s(filename,"ep_XZ_backward%d.fld",t);//他のファイルと同じ階層に生成するならこちら
-		else if(cross_section==1)	sprintf_s(filename,"ep_YZ_backward%d.fld",t);
-		else if(cross_section==2)	sprintf_s(filename,"ep_XY_backward%d.fld",t);
-		ofstream fout2(filename);
-		if(!fout2)
-		{
-			cout << "cannot open" << filename << endl;
-			exit(EXIT_FAILURE);
-		}
-
-		fout2 << "# AVS field file" << endl;
-		fout2 << "ndim=1" << endl;
-		fout2 << "dim1=" << n <<endl;
-		fout2 << "nspace=3" << endl;
-		fout2 << "veclen=1" << endl;
-		fout2 << "data=float" << endl;
-		fout2 << "field=irregular" << endl;
-		fout2 << "label=equivalent_strain_rate" << endl << endl;
-		//fout2 << "variable 1 file=./pressure" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//フォルダを作成して管理する場合はこちら
-		//fout2 << "coord    1 file=./pressure" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//フォルダを作成して管理する場合はこちら
-		//fout2 << "coord    2 file=./pressure" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//フォルダを作成して管理する場合はこちら
-		//fout2 << "coord    3 file=./pressure" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//フォルダを作成して管理する場合はこちら
-		fout2 << "variable 1 file=ep_XZ_backward" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
-		fout2 << "coord    1 file=ep_XZ_backward" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
-		fout2 << "coord    2 file=ep_XZ_backward" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
-		fout2 << "coord    3 file=ep_XZ_backward" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
-		fout2.close();
-	}
-
 }
+
+
+
+//圧力など粒子の持つ情報をコンター図で表示する関数
+void physical_quantity_movie_AVS(mpsconfig *CON,int t,vector<mpsparticle> &PART,int particle_number)
+{
+	//参考にしている書式はmicroAVSのヘルプであなたのデータは？→「非構造格子型データ（アスキー）の書式」
+	double TIME=(t-1)*CON->get_dt();
+	double le=CON->get_distancebp();
+	int STEP=CON->get_step()/CON->get_interval()+1;		//出力する総ステップ数
+	int *input=new int[particle_number];			//input[]=ONなら出力
+	int *input2=new int[particle_number];
+	double cross_section=CON->get_speed_face_p();
+
+	if(t==1) 
+	{
+		ofstream fp("physical_quantity_movie_YZ.inp");			
+		fp<<STEP<<endl;						//microAVSに出力する総ｽﾃｯﾌﾟ数。ファイル出力はCON->get_interval()回に1回と最初に行う。
+		fp<<"data_geom"<<endl;
+		fp.close();
+		
+		ofstream	fp2("physical_quantity_movie_XZ.inp");
+		fp2<<STEP<<endl;
+		fp2<<"data_geom"<<endl;
+		fp2.close();
+	}
+
+	//mainファイル書き込み
+	ofstream fp("physical_quantity_movie_YZ.inp",ios :: app);
+	fp<<"step"<<t/CON->get_interval()+1<<" TIME="<<TIME<<endl;
+	ofstream fp2("physical_quantity_movie_XZ.inp",ios::app);
+	fp2<<"step"<<t/CON->get_interval()+1<<" TIME="<<TIME<<endl;
+
+	//出力粒子数算出
+	int n=0;//表示する粒子数
+	int n2=0;
+
+	for(int i=0;i<particle_number;i++)
+	{
+		if(PART[i].type==FLUID)
+		{
+			if(PART[i].r[A_X]<cross_section+0.5*le&&PART[i].r[A_X]>cross_section-0.5*le)
+			{
+				input[i]=ON;
+				n++;//3次元の場合、内部流体は表示しない
+			}
+			else
+			{
+				input[i]=OFF;
+			}
+			if(PART[i].r[A_Y]<cross_section+0.5*le&&PART[i].r[A_Y]>cross_section-0.5*le)
+			{
+				input2[i]=ON;
+				n2++;
+			}
+			else
+			{
+				input2[i]=OFF;
+			}
+		}
+	}
+
+	fp<<n<<" "<<n<<endl;	//節点数と要素数出力 この場合は両方とも節点数をいれておく
+	fp2<<n2<<" "<<n2<<endl;
+
+	//節点番号とその座標の出力 
+	int count=0;
+	int count2=0;
+
+	for(int i=0;i<particle_number;i++)
+	{
+		if(input[i]==ON)
+		{
+			 fp<<count<<" "<<PART[i].r[A_X]<<" "<<PART[i].r[A_Y]<<" "<<PART[i].r[A_Z]<<endl;
+			 count++;
+		}
+		if(input2[i]==ON)
+		{
+			fp2<<count2<<" "<<PART[i].r[A_X]<<" "<<PART[i].r[A_Y]<<" "<<PART[i].r[A_Z]<<endl;
+			count2++;
+		}
+	}
+
+	//要素番号と要素形状の種類、そして要素を構成する節点番号出力
+	for(int i=0;i<n;i++)	fp<<i<<"  0 pt "<<i<<endl;
+	for(int i=0;i<n2;i++)fp2<<i<<" 0 pt "<<i<<endl;
+
+	//fp<<"2 3"<<endl;//節点の情報量が2で、要素の情報量が3ということ。
+	fp<<"3 0"<<endl;//節点の情報量が8で、要素の情報量が0ということ。
+	fp<<"3 1 1 1"<<endl;	//この行の詳細はヘルプを参照
+	fp<<"T_YZ,"<<endl;
+	fp<<"vis_YZ,"<<endl;
+	fp<<"ep_YZ,"<<endl;
+
+	fp2<<"3 0"<<endl;//節点の情報量が8で、要素の情報量が0ということ。
+	fp2<<"3 1 1 1"<<endl;	//この行の詳細はヘルプを参照
+	fp2<<"T_XZ,"<<endl;
+	fp2<<"vis_XZ,"<<endl;
+	fp2<<"ep_XZ,"<<endl;
+
+	//各節点の情報値入力
+	count=0;
+	count2=0;
+	for(int i=0;i<particle_number;i++)
+	{
+		if(input[i]==ON)
+		{
+			fp<<count<<" "<<PART[i].T<<" "<<PART[i].vis<<" "<<PART[i].ep<<"\n";
+			count++;
+		}
+		if(input2[i]==ON)
+		{
+			fp2<<count2<<" "<<PART[i].T<<" "<<PART[i].vis<<" "<<PART[i].ep<<"\n";
+			count2++;
+		}
+	}
+	fp.close();
+	fp2.close();
+
+	delete [] input;
+	delete [] input2;
+}
+
 
 //各粒子の物性値を温度に応じて変化させる//産総研のデータベース　http://riodb.ibase.aist.go.jp/TPDB/DBGVsupport/detail/aluminum.html
 void calc_physical_property(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_number,double *val,int particle_number,int sw)
@@ -6839,7 +6833,7 @@ void delete_particle(mpsconfig &CON,vector<mpsparticle> &PART,int *particle_numb
 			if(Y<Ymin || Y>Ymax) flag=2;
 			if(Z<Zmin || Z>Zmax) flag=3;//電極の中に埋もれても削除
 			if(CON.get_model_number()==14)	if(PART[i].r[A_Z]<-le*2.0) flag=4;//(静電無化の場合)電極の中に埋もれても削除
-			if(CON.get_model_number()==19)	if(PART[i].r[A_Z]>ZM*1.1) flag=8;//(fswの場合)ツールより上にあったら削除
+			if(CON.get_model_number)	if(PART[i].r[A_Z]>ZM*1.1) flag=8;//(fswの場合)ツールより上にあったら削除
 			if(CON.get_model_number()==20 || CON.get_model_number()==21 || CON.get_model_number()==22)//(CC溶解の場合)るつぼにめり込んだら削除
 			{
 				if(Z>=0)
@@ -7074,3 +7068,4 @@ void calc_wallZ(mpsconfig *CON,vector<mpsparticle> &PART,int particle_number,dou
 	cout<<"壁重みの計算完了"<<endl;
 
 }
+

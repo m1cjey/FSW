@@ -91,9 +91,9 @@ mpsconfig::mpsconfig()
 	distancebp=0.0005;//0.001;//0.0015;//0.002;//0.001;//0.0005
 	wlength=2;
 	height=-0.004;//-0.004;//0.06;//0.102;//0.18;//0.005;    
-	tool_angle=3;//FSWにおいて、ツールを傾ける角度(弧度)
-	tool_type=1;//FSWにおける、ツール形状0:デフォルト(円柱)　1:円錐 2:円柱裏表
-	process_type=0;//FSWにおける過程選択		//0:plunge 1:traverse
+	tool_angle=0;//FSWにおいて、ツールを傾ける角度(弧度)
+	tool_type=0;//FSWにおける、ツール形状0:デフォルト(円柱)　1:円錐 2:円柱裏表
+	process_type=2;//FSWにおける過程選択		//0:plunge 1:traverse 2:plung→traverse
 	airwall=OFF;//IH釜において、流体上部に壁を配置するかどうか
 
 	///////粒子法用パラメータ
@@ -273,6 +273,7 @@ mpsconfig::mpsconfig()
 	move_prtcl=ON;			//移動粒子を考慮するかしないか 1=ON 0=OFF
 	move_u_dirct=-3;//-3;//2;			//移動粒子を移動する方向　現在は±X方向=±1,±Y方向=±2,±Z方向=±3
 	move_speed=1.0e-3;//1.0e-3//1.5e-3;//1.5e-3;//1e-3;//8.333*1e-3;//12.5*1e-3;	//移動粒子の移動速度[m/s]
+	move_speed2=8.333e-3;//500mm/min吉川さんの論文引用
 	check_something=OFF;		//check_something()を実行するかしないか 1=ON 0=OFF
 	check_region=ON;			//条件を満たした粒子を消去するかしないか
 	max_speed=20;//5;			//chec_regionがONになっているとき、粒子の速度がこの値以上なら削除する
@@ -280,10 +281,9 @@ mpsconfig::mpsconfig()
 	adaptive_sw=OFF;		//解像度を可変にするか、しないか 1=ON 0=OFF
 	threshold=1;//1e-3;			//アダプティブにする際の、圧力誤差の閾値
 	fix_surface=0;			//表面流体を固定するかどうか
-	output_viscousity_face=1;	//0=YZ平面 1=XZ平面	2=XY平面	//動粘性係数出力面
-	output_equivalent_strain_rate_face=1;	// 0=YZ平面 1=XZ平面	2=XY平面	//相当ひずみ率出力面
 	output_forward=ON;
 	output_backward=ON;
+	output_another_face=ON;
 
 	model_number=19;
 	model_set_way=1;		//modelをセットする方法　0=正方格子 1=MD
@@ -293,7 +293,7 @@ mpsconfig::mpsconfig()
 	////////速度ﾌﾟﾛｯﾄ変数
 	speed_plot_particle=2;	//速度をﾌﾟﾛｯﾄする粒子の種類 1=すべて 2=fluid 3=壁
 	speedtimes=1e-3;//2e-2;//1e-2;//1e-3;		//速度ﾌﾟﾛｯﾄ時の、座標に対する速度の倍率
-	speed_face=1;			//3D解析時のspeed.datの出力面 0=YZ平面 1=XZ	2=XY
+	speed_face=1;			//3D解析時のspeed.datの出力面 0=YZ平面 1=XZ	2=XY	//粘性、温度分布の出力面を兼ね備えている
 	speed_face_p=0.0;//-1.0e-3;//0.006;//0.0;		//3D解析時のspeed.datの出力面の座標
 	ax_sym_modify=OFF;		//3D時のspeed.datに関して、軸対称による出力修正を行うか否か　1=ON 0=OF
 	flat_speed_plot=OFF;	//OFF//水平方向の速度(XY面)をﾌﾟﾛｯﾄするかしないか1=ON 0=OFF		//speed_eachにXY平面の出力を付け加えたため不要かも

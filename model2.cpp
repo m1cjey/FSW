@@ -1304,7 +1304,7 @@ void set_initial_placement_using_MD(mpsconfig *CON,int *particle_number)
 								v=speed*(X[i]/r);
 								if(Z[i]<Height && r>probe_R-0.3*le) uw=-pich*rps;//INWALLのうち、プローブの側面のみ(底面は除く)に下方向速度追加
 								if(calc_type==traverse) v+=U;//y方向にツールを移動
-								if(calc_type==plunge) uw-=U;//Z方向にツールを移動(plange phase)
+								else if(calc_type==plunge) uw-=U;//Z方向にツールを移動(plange phase)
 							}
 							if(r<=shold_R+le && Z[i]>0) AA=MOVE;
 							materialID=1;		
@@ -1476,13 +1476,11 @@ void set_initial_placement_using_MD(mpsconfig *CON,int *particle_number)
 								else if(calc_type==plunge) uw-=U;//Z方向にツールを移動(plange phase)
 							}
 							if(r<=shold_R+le && Z3[i]>0) AA=MOVE;
-						}
-							
+						}							
 						materialID=1;
 						writedata2(fq, count2, X[i],Y[i],Z[i], OUTWALL,materialID,OFF,0, u,v,uw,0,wall_h,AA);
 						count2++;
-					}
-						
+					}					
 				}
 			}
 

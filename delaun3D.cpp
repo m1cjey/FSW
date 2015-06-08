@@ -474,7 +474,7 @@ int locate3D(vector<point3D> &NODE,vector<element3D> &ELEM,int nelm,double xp,do
 				{   //外側
 					itet=ELEM[itet].elm[n];//itetの第n面に隣接している要素を次の検査対象とする
 					flag=1;
-					if(itet==0) return 0;	//領域の外にでた場合は0を返す。通常のデローニではありえない状況だが、たとえばremesh領域における空気層生成時には、法線ベクトル上の節点位置が静的要素領域にはいるとこのようなエラーとなる
+					if(itet==0) return 0;	//領域の外にでた場合は0を返す。通常のデローニではありえない状況だが、たとえばremesh領域における	層生成時には、法線ベクトル上の節点位置が静的要素領域にはいるとこのようなエラーとなる
 				}
 			}
         }

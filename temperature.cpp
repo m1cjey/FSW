@@ -149,7 +149,7 @@ void calc_Temperature(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_number,
 		double width0=18*1e-3;//25*1e-3;//18*1e-3;//流体が占める幅
 		double Width=width0;		//横18mm+壁粒子を左右に4粒子分
 		double Height=6*1e-3;	//高さ6mm+壁粒子を下に4粒子分
-		double Depth=30*1e-3;//27*1e-3+6*le*A;	//奥行き27mm+壁粒子を左右に4粒子分
+		double Depth=18e-3;//30*1e-3;//27*1e-3+6*le*A;	//奥行き27mm+壁粒子を左右に4粒子分
 		double depth0=9e-3;				//ツール中心と、手前の壁との距離
 	
 		//double Z_mod=le*B+(1-sqrt(2.0)/2)*le;//ツールが流体へめり込むのを防ぐための調整量　この値だけツール以外の物体が下がる
@@ -528,24 +528,65 @@ void plot_T(mpsconfig *CON ,vector<mpsparticle> &PART,int particle_number,double
 void output_temperature_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int particle_number,int fluid_number,double *T,double height)
 {
 	char filename[30];
-	int n=0;
+	char filename_n[30];
+	char filename_f[30];
+	char filename_b[30];
+	int n=0,nn=0,nf=0,nb=0;
+
 	double le=CON->get_distancebp();
 	double cross_section=CON->get_speed_face_p();
-	int output_face=CON->get_output_temperature_face();
-	//t=1;//いまはわざと毎ステップ上書き
+	int output_face=CON->get_speed_face();
+	int output_face_n=0;
 
-	/*
+	double shold_R=4.25*1e-3;
+	if(CON->get_tool_angle()>0)	
+	{
+		double	angle=CON->get_tool_angle();
+		shold_R*=cos(angle);
+	}
+
+	//t=1;//いまはわざと毎ステップ上書き
+	
 	//sprintf_s(filename,"pressure/pressure%d",t);//フォルダを作成して管理する場合はこちら
-	if(cross_section==0)	sprintf_s(filename,"T_XZ%d",t);//他のファイルと同じ階層に生成するならこちら
-	else if(cross_section==1)	sprintf_s(filename,"T_YZ%d",t);
-	else if(cross_section==2)	sprintf_s(filename,"T_XY%d",t);
+	if(output_face==0)
+	{
+		sprintf_s(filename,"T_YZ%d",t);//他のファイルと同じ階層に生成するならこちら
+		if(CON->get_output_another_face()==ON)
+		{
+			sprintf_s(filename_n,"T_XZ%d",t);
+			output_face_n=1;
+		}
+		if(CON->get_output_forward()==ON)	sprintf_s(filename_f,"T_YZ_forward%d",t);
+		if(CON->get_output_backward()==ON)	sprintf_s(filename_b,"T_YZ_backward%d",t);
+	}
+	else if(output_face==1)
+	{
+		sprintf_s(filename,"T_XZ%d",t);
+		if(CON->get_output_another_face()==ON)
+		{
+			sprintf_s(filename_n,"T_YZ%d",t);
+			output_face_n=0;
+		}
+		if(CON->get_output_forward()==ON)	sprintf_s(filename_f,"T_XZ_forward%d",t);
+		if(CON->get_output_backward()==ON)	sprintf_s(filename_b,"T_XZ_backward%d",t);
+	}
+	else if(output_face==2)
+	{
+		sprintf_s(filename,"T_XY%d",t);
+		if(CON->get_output_forward()==ON)	sprintf_s(filename_f,"T_XY_forward%d",t);
+		if(CON->get_output_backward()==ON)	sprintf_s(filename_b,"T_XY_backward%d",t);
+	}
 
 	ofstream fout(filename);
+	ofstream	fout_n(filename_n);
+	ofstream	fout_f(filename_f);
+	ofstream	fout_b(filename_b);
 	if(!fout)
 	{
 		cout << "cannot open" << filename << endl;
 		exit(EXIT_FAILURE);
 	}
+
 	if(CON->get_dimention()==3)
 	{
 		for(int i=0;i<particle_number;i++)
@@ -553,7 +594,7 @@ void output_temperature_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 			if(PART[i].type==FLUID)
 			{
 				if(PART[i].r[output_face]<cross_section+0.5*le && PART[i].r[output_face]>cross_section-0.5*le)	
-					//if(PART[i].r[A_Y]<0.006+0.5*le && PART[i].r[A_Y]>0.006-0.5*le)	
+				//if(PART[i].r[A_Y]<0.006+0.5*le && PART[i].r[A_Y]>0.006-0.5*le)	
 				{
 					double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
 					double y=PART[i].r[A_Y]*1.0E+05;
@@ -561,6 +602,48 @@ void output_temperature_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 					double P=T[i];
 					fout << P << "\t" << x << "\t" << y << "\t" << z << endl;
 					n++;
+				}
+
+				if(CON->get_output_another_face()==ON)
+				{
+					if(PART[i].r[output_face_n]<cross_section+0.5*le && PART[i].r[output_face_n]>cross_section-0.5*le)	
+					//if(PART[i].r[A_Y]<0.006+0.5*le && PART[i].r[A_Y]>0.006-0.5*le)	
+					{
+						double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
+						double y=PART[i].r[A_Y]*1.0E+05;
+						double z=PART[i].r[A_Z]*1.0E+05;
+						double P=T[i];
+						fout_n << P << "\t" << x << "\t" << y << "\t" << z << endl;
+						nn++;
+					}
+				}
+
+				if(CON->get_output_forward()==ON)
+				{
+					if(PART[i].r[output_face]<cross_section-shold_R+0.5*le && PART[i].r[output_face]>cross_section-shold_R-0.5*le)	
+					//if(PART[i].r[A_Y]<0.006+0.5*le && PART[i].r[A_Y]>0.006-0.5*le)	
+					{
+						double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
+						double y=PART[i].r[A_Y]*1.0E+05;
+						double z=PART[i].r[A_Z]*1.0E+05;
+						double P=T[i];
+						fout_f << P << "\t" << x << "\t" << y << "\t" << z << endl;
+						nf++;
+					}
+				}
+
+				if(CON->get_output_backward()==ON)
+				{
+					if(PART[i].r[output_face]<cross_section+shold_R+0.5*le && PART[i].r[output_face]>cross_section+shold_R-0.5*le)	
+					//if(PART[i].r[A_Y]<0.006+0.5*le && PART[i].r[A_Y]>0.006-0.5*le)	
+					{
+						double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
+						double y=PART[i].r[A_Y]*1.0E+05;
+						double z=PART[i].r[A_Z]*1.0E+05;
+						double P=T[i];
+						fout_b << P << "\t" << x << "\t" << y << "\t" << z << endl;
+						nb++;
+					}
 				}
 			}
 		}
@@ -571,29 +654,52 @@ void output_temperature_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 		{
 			if(PART[i].type!=FLUID)
 			{
-			double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
-			double y=PART[i].r[A_Y]*1.0E+05;
-			double z=PART[i].r[A_Z]*1.0E+05;
+				double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
+				double y=PART[i].r[A_Y]*1.0E+05;
+				double z=PART[i].r[A_Z]*1.0E+05;
 
-			//double x=PART[i].r[A_X];//*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
-			//double y=PART[i].r[A_Y];//*1.0E+05;
-			//double z=PART[i].r[A_Z];//*1.0E+05;
-			double P=T[i];
-			//double P=PART[i].heat_gene_before1;
-			fout << P << "\t" << x << "\t" << y << "\t" << z << endl;
-			n++;
-		}
+				//double x=PART[i].r[A_X];//*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
+				//double y=PART[i].r[A_Y];//*1.0E+05;
+				//double z=PART[i].r[A_Z];//*1.0E+05;
+				double P=T[i];
+				//double P=PART[i].heat_gene_before1;
+				fout << P << "\t" << x << "\t" << y << "\t" << z << endl;
+				n++;
+			}
 		}
 	}
 	fout.close();
+	fout_n.close();
+	fout_b.close();
+	fout_f.close();
+
 
 	//sprintf_s(filename,"pressure/pressure%d.fld",t);//フォルダを作成して管理する場合はこちら
-
-	if(cross_section==0)	sprintf_s(filename,"T_XZ%d.fld",t);//他のファイルと同じ階層に生成するならこちら
-	else if(cross_section==1)	sprintf_s(filename,"T_YZ%d.fld",t);
-	else if(cross_section==2)	sprintf_s(filename,"T_XY%d.fld",t);
+	if(output_face==0)
+	{
+		sprintf_s(filename,"T_YZ%d.fld",t);//他のファイルと同じ階層に生成するならこちら
+		if(CON->get_output_another_face()==ON)	sprintf_s(filename_n,"T_XZ%d.fld",t);
+		if(CON->get_output_forward()==ON)	sprintf_s(filename_f,"T_YZ_forward%d.fld",t);
+		if(CON->get_output_backward()==ON)	sprintf_s(filename_b,"T_YZ_backward%d.fld",t);
+	}
+	else if(output_face==1)
+	{
+		sprintf_s(filename,"T_XZ%d.fld",t);
+		if(CON->get_output_another_face()==ON)	sprintf_s(filename_n,"T_YZ%d.fld",t);
+		if(CON->get_output_forward()==ON)	sprintf_s(filename_f,"T_XZ_forward%d.fld",t);
+		if(CON->get_output_backward()==ON)	sprintf_s(filename_b,"T_XZ_backward%d.fld",t);
+	}
+	else if(output_face==2)
+	{
+		sprintf_s(filename,"T_XY%d.fld",t);
+		if(CON->get_output_forward()==ON)	sprintf_s(filename_f,"T_XY_forward%d.fld",t);
+		if(CON->get_output_backward()==ON)	sprintf_s(filename_b,"T_XY_backward%d.fld",t);
+	}
 
 	ofstream fout2(filename);
+	ofstream fout_n2(filename_n);
+	ofstream fout_f2(filename_f);
+	ofstream fout_b2(filename_b);
 	if(!fout2)
 	{
 		cout << "cannot open" << filename << endl;
@@ -612,149 +718,138 @@ void output_temperature_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 	//fout2 << "coord    1 file=./pressure" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//フォルダを作成して管理する場合はこちら
 	//fout2 << "coord    2 file=./pressure" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//フォルダを作成して管理する場合はこちら
 	//fout2 << "coord    3 file=./pressure" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//フォルダを作成して管理する場合はこちら
-	fout2 << "variable 1 file=T_XZ" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
-	fout2 << "coord    1 file=T_XZ" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
-	fout2 << "coord    2 file=T_XZ" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
-	fout2 << "coord    3 file=T_XZ" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
-	fout2.close();*///05/08
 
-	
-	if(CON->get_model_number()==19&&CON->get_process_type()==0&&CON->get_output_forward()==ON)
+	if(output_face==0)
 	{
-		double shold_R=6*1e-3;
-		if(CON->get_tool_angle()>0)	
+		fout2 << "variable 1 file=T_YZ" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		fout2 << "coord    1 file=T_YZ" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		fout2 << "coord    2 file=T_YZ" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		fout2 << "coord    3 file=T_YZ" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+	}
+	if(output_face==1)
+	{
+		fout2 << "variable 1 file=T_XZ" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		fout2 << "coord    1 file=T_XZ" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		fout2 << "coord    2 file=T_XZ" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		fout2 << "coord    3 file=T_XZ" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+	}
+	if(output_face==2)
+	{
+		fout2 << "variable 1 file=T_XY" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		fout2 << "coord    1 file=T_XY" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		fout2 << "coord    2 file=T_XY" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		fout2 << "coord    3 file=T_XY" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+	}
+	fout2.close();
+
+	///////////////////温度分布出力_他断面
+	if(CON->get_output_another_face()==ON)
+	{
+		fout_n2 << "# AVS field file" << endl;
+		fout_n2 << "ndim=1" << endl;
+		fout_n2 << "dim1=" << nn <<endl;
+		fout_n2 << "nspace=3" << endl;
+		fout_n2 << "veclen=1" << endl;
+		fout_n2 << "data=float" << endl;
+		fout_n2 << "field=irregular" << endl;
+		fout_n2 << "label=temperature" << endl << endl;
+		//fout2n << "variable 1 file=./pressure" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//フォルダを作成して管理する場合はこちら
+		//fout2n << "coord    1 file=./pressure" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//フォルダを作成して管理する場合はこちら
+		//fout2n << "coord    2 file=./pressure" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//フォルダを作成して管理する場合はこちら
+		//fout2n << "coord    3 file=./pressure" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//フォルダを作成して管理する場合はこちら
+		if(output_face_n==0)
 		{
-			double	angle=CON->get_tool_angle();
-			shold_R*=cos(angle);
+			fout_n2 << "variable 1 file=T_YZ" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_n2 << "coord    1 file=T_YZ" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_n2 << "coord    2 file=T_YZ" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_n2 << "coord    3 file=T_YZ" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
 		}
-
-		if(cross_section==0)	sprintf_s(filename,"T_XZ_forward%d",t);//他のファイルと同じ階層に生成するならこちら
-		else if(cross_section==1)	sprintf_s(filename,"T_YZ_forward%d",t);
-		else if(cross_section==2)	sprintf_s(filename,"T_XY_forward%d",t);
-
-		ofstream fout(filename);
-		if(!fout)
+		if(output_face_n==1)
 		{
-			cout << "cannot open" << filename << endl;
-			exit(EXIT_FAILURE);
+			fout_n2 << "variable 1 file=T_XZ" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_n2 << "coord    1 file=T_XZ" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_n2 << "coord    2 file=T_XZ" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_n2 << "coord    3 file=T_XZ" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
 		}
-
-		for(int i=0;i<particle_number;i++)
-		{
-			if(PART[i].type==FLUID)
-			{
-				if(PART[i].r[output_face]<cross_section-shold_R+0.5*le && PART[i].r[output_face]>cross_section-shold_R-0.5*le)	
-				//if(PART[i].r[A_Y]<0.006+0.5*le && PART[i].r[A_Y]>0.006-0.5*le)	
-				{
-					double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
-					double y=PART[i].r[A_Y]*1.0E+05;
-					double z=PART[i].r[A_Z]*1.0E+05;
-					double P=PART[i].T;
-					fout << P << "\t" << x << "\t" << y << "\t" << z << endl;
-					n++;
-				}
-			}
-		}
-
-		fout.close();
-		//sprintf_s(filename,"pressure/pressure%d.fld",t);//フォルダを作成して管理する場合はこちら
-
-		if(cross_section==0)	sprintf_s(filename,"T_XZ_forward%d.fld",t);//他のファイルと同じ階層に生成するならこちら
-		else if(cross_section==1)	sprintf_s(filename,"T_YZ_forward%d.fld",t);
-		else if(cross_section==2)	sprintf_s(filename,"T_XY_forward%d.fld",t);
-		ofstream fout2(filename);
-		if(!fout2)
-		{
-			cout << "cannot open" << filename << endl;
-			exit(EXIT_FAILURE);
-		}
-
-		fout2 << "# AVS field file" << endl;
-		fout2 << "ndim=1" << endl;
-		fout2 << "dim1=" << n <<endl;
-		fout2 << "nspace=3" << endl;
-		fout2 << "veclen=1" << endl;
-		fout2 << "data=float" << endl;
-		fout2 << "field=irregular" << endl;
-		fout2 << "label=temperature" << endl << endl;
-		//fout2 << "variable 1 file=./pressure" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//フォルダを作成して管理する場合はこちら
-		//fout2 << "coord    1 file=./pressure" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//フォルダを作成して管理する場合はこちら
-		//fout2 << "coord    2 file=./pressure" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//フォルダを作成して管理する場合はこちら
-		//fout2 << "coord    3 file=./pressure" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//フォルダを作成して管理する場合はこちら
-		fout2 << "variable 1 file=T_XZ_forward" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
-		fout2 << "coord    1 file=T_XZ_forward" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
-		fout2 << "coord    2 file=T_XZ_forward" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
-		fout2 << "coord    3 file=T_XZ_forward" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
-		fout2.close();
+		fout_n2.close();
 	}
 
-	if(CON->get_model_number()==19&&CON->get_process_type()==0&&CON->get_output_backward()==ON)
+	////////////////粘性分布出力_前方
+	if(CON->get_output_forward()==ON)
 	{
-		double shold_R=6*1e-3;
-		if(CON->get_tool_angle()>0)	
-		{
-			double	angle=CON->get_tool_angle();
-			shold_R*=cos(angle);
-		}
-
-		if(cross_section==0)	sprintf_s(filename,"T_XZ_backward%d",t);//他のファイルと同じ階層に生成するならこちら
-		else if(cross_section==1)	sprintf_s(filename,"T_YZ_backward%d",t);
-		else if(cross_section==2)	sprintf_s(filename,"T_XY_backward%d",t);
-
-		ofstream fout(filename);
-		if(!fout)
-		{
-			cout << "cannot open" << filename << endl;
-			exit(EXIT_FAILURE);
-		}
-
-		for(int i=0;i<particle_number;i++)
-		{
-			if(PART[i].type==FLUID)
-			{
-				if(PART[i].r[output_face]<cross_section+shold_R+0.5*le && PART[i].r[output_face]>cross_section+shold_R-0.5*le)	
-				//if(PART[i].r[A_Y]<0.006+0.5*le && PART[i].r[A_Y]>0.006-0.5*le)	
-				{
-					double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
-					double y=PART[i].r[A_Y]*1.0E+05;
-					double z=PART[i].r[A_Z]*1.0E+05;
-					double P=PART[i].T;
-					fout << P << "\t" << x << "\t" << y << "\t" << z << endl;
-					n++;
-				}
-			}
-		}
-
-		fout.close();
-		//sprintf_s(filename,"pressure/pressure%d.fld",t);//フォルダを作成して管理する場合はこちら
-
-		if(cross_section==0)	sprintf_s(filename,"T_XZ_backward%d.fld",t);//他のファイルと同じ階層に生成するならこちら
-		else if(cross_section==1)	sprintf_s(filename,"T_YZ_backward%d.fld",t);
-		else if(cross_section==2)	sprintf_s(filename,"T_XY_backward%d.fld",t);
-		ofstream fout2(filename);
-		if(!fout2)
-		{
-			cout << "cannot open" << filename << endl;
-			exit(EXIT_FAILURE);
-		}
-
-		fout2 << "# AVS field file" << endl;
-		fout2 << "ndim=1" << endl;
-		fout2 << "dim1=" << n <<endl;
-		fout2 << "nspace=3" << endl;
-		fout2 << "veclen=1" << endl;
-		fout2 << "data=float" << endl;
-		fout2 << "field=irregular" << endl;
-		fout2 << "label=temperature" << endl << endl;
+		fout_f2 << "# AVS field file" << endl;
+		fout_f2 << "ndim=1" << endl;
+		fout_f2 << "dim1=" << nf <<endl;
+		fout_f2 << "nspace=3" << endl;
+		fout_f2 << "veclen=1" << endl;
+		fout_f2 << "data=float" << endl;
+		fout_f2 << "field=irregular" << endl;
+		fout_f2 << "label=temperature" << endl << endl;
 		//fout2 << "variable 1 file=./pressure" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//フォルダを作成して管理する場合はこちら
 		//fout2 << "coord    1 file=./pressure" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//フォルダを作成して管理する場合はこちら
 		//fout2 << "coord    2 file=./pressure" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//フォルダを作成して管理する場合はこちら
 		//fout2 << "coord    3 file=./pressure" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//フォルダを作成して管理する場合はこちら
-		fout2 << "variable 1 file=T_XZ_backward" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
-		fout2 << "coord    1 file=T_XZ_backward" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
-		fout2 << "coord    2 file=T_XZ_backward" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
-		fout2 << "coord    3 file=T_XZ_backward" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
-		fout2.close();
+		if(output_face==0)
+		{
+			fout_f2 << "variable 1 file=T_YZ_forward" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_f2 << "coord    1 file=T_YZ_forward" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_f2 << "coord    2 file=T_YZ_forward" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_f2 << "coord    3 file=T_YZ_forward" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		}
+		else if(output_face==1)
+		{
+			fout_f2 << "variable 1 file=T_XZ_forward" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_f2 << "coord    1 file=T_XZ_forward" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_f2 << "coord    2 file=T_XZ_forward" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_f2 << "coord    3 file=T_XZ_forward" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		}
+		else if(output_face==2)
+		{
+			fout_f2 << "variable 1 file=T_XY_forward" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_f2 << "coord    1 file=T_XY_forward" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_f2 << "coord    2 file=T_XY_forward" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_f2 << "coord    3 file=T_XY_forward" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		}
+		fout_f2.close();
+	}
+
+	////////////温度分布出力＿後方
+	if(CON->get_output_backward()==ON)
+	{
+		fout_b2 << "# AVS field file" << endl;
+		fout_b2 << "ndim=1" << endl;
+		fout_b2 << "dim1=" << nb <<endl;
+		fout_b2 << "nspace=3" << endl;
+		fout_b2 << "veclen=1" << endl;
+		fout_b2 << "data=float" << endl;
+		fout_b2 << "field=irregular" << endl;
+		fout_b2 << "label=temperature" << endl << endl;
+		//fout2 << "variable 1 file=./pressure" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//フォルダを作成して管理する場合はこちら
+		//fout2 << "coord    1 file=./pressure" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//フォルダを作成して管理する場合はこちら
+		//fout2 << "coord    2 file=./pressure" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//フォルダを作成して管理する場合はこちら
+		//fout2 << "coord    3 file=./pressure" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//フォルダを作成して管理する場合はこちら
+		if(output_face==0)
+		{
+			fout_b2 << "variable 1 file=T_YZ_backward" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_b2 << "coord    1 file=T_YZ_backward" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_b2 << "coord    2 file=T_YZ_backward" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_b2 << "coord    3 file=T_YZ_backward" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		}
+		else if(output_face==1)
+		{
+			fout_b2 << "variable 1 file=T_XZ_backward" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_b2 << "coord    1 file=T_XZ_backward" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_b2 << "coord    2 file=T_XZ_backward" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_b2 << "coord    3 file=T_XZ_backward" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		}
+		else if(output_face==2)
+		{
+			fout_b2 << "variable 1 file=T_XY_backward" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_b2 << "coord    1 file=T_XY_backward" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_b2 << "coord    2 file=T_XY_backward" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_b2 << "coord    3 file=T_XY_backward" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		}
+		fout_b2.close();
 	}
 
 }
@@ -1119,7 +1214,7 @@ void calc_temperature_implicity(mpsconfig *CON,vector<mpsparticle> &PART,int flu
     plot_T(CON ,PART,particle_number,T,height);
 	if(CON->get_T_AVS()>0)
 	{
-		if(t%CON->get_T_AVS()==0 || t==1)output_temperature_avs(CON,PART, t, particle_number, fluid_number,T, height);
+		if(t%CON->get_T_AVS()==0 || t==1)output_temperature_avs(CON,PART, t, particle_number, fluid_number,T, height);	//05/08
 	}
 
 

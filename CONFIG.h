@@ -134,6 +134,7 @@ class mpsconfig
 	int output_equivalent_strain_rate_face;
 	int output_forward;
 	int output_backward;
+	int output_another_face;
 
 	////////電磁場の解法
 	int		EM_method;			//電磁場の解法 0=OFF 1=FEM 2=BEM 3=磁気ﾓｰﾒﾝﾄ法
@@ -242,6 +243,7 @@ class mpsconfig
 	int    move_prtcl;	//移動粒子を考慮するかしないか 1=ON 0=OFF
 	int    move_u_dirct;//移動粒子を移動する方向　現在は±X方向=±1,±Y方向=±2,±Z方向=±3
 	double move_speed;	//移動粒子の移動速度[m/s]
+	double move_speed2; //移動粒子の移動速度[m/s]
 	int	   check_region;//条件を満たした粒子を削除するかしないか
 	double max_speed;	//chec_regionがONになっているとき、粒子の速度がこの値以上なら削除する
 	int    check_something;//check_something()を実行するかしないか 1=ON 0=OFF
@@ -501,6 +503,7 @@ class mpsconfig
 	int    get_move_prtcl(){return move_prtcl;}
 	int    get_move_u_dirct(){return move_u_dirct;}
 	double get_move_speed() {return move_speed;}
+	double get_move_speed2(){return move_speed2;}
 	int    get_check_something() {return check_something;}
 	int    get_check_region() {return check_region;}
 	double get_max_speed() {return max_speed;}
@@ -513,6 +516,7 @@ class mpsconfig
 	int get_output_equivalent_strain_rate_face(){return output_equivalent_strain_rate_face;}
 	int get_output_forward(){return output_forward;}
 	int get_output_backward(){return output_backward;}
+	int get_output_another_face(){return output_another_face;}
 
 	int    get_model_number(){return model_number;}
 	int    get_model_set_way(){return model_set_way;}
