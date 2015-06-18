@@ -414,9 +414,14 @@ void set_initial_placement(mpsconfig *CON,int *particle_number)
 			int materialID=1;
 
 			//calclation type
-			int plunge=1;
-			int traverse=2;
-			int calc_type=plunge;		//1:plunge 2:traverse
+			int plunge=0;
+			int traverse=1;
+			int calc_type=0;
+			if(CON->get_process_type()==2)	calc_type=0;	//1:plunge 2:traverse
+			else
+			{
+				calc_type=CON->get_process_type();
+			}
 			double plunge_H=4*1e-3+1*le;	//plunge解析の際の、ツールを上げる高さ
 
 			//流体 半径9mm、深さ6mm

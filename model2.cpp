@@ -989,10 +989,10 @@ void set_initial_placement_using_MD(mpsconfig *CON,int *particle_number)
 		int plunge=0;
 		int traverse=1;
 		int calc_type=0;
-		if(CON->get_process_type()==2)	calc_type=plunge;
+		if(CON->get_process_type()==2||CON->get_process_type()==0)	calc_type=plunge;
 		else
 		{
-			calc_type=CON->get_process_type();//0:plunge 1:traverse
+			calc_type=1;//0:plunge 1:traverse
 		}
 		if(Dim==3)
 		{
@@ -1098,7 +1098,7 @@ void set_initial_placement_using_MD(mpsconfig *CON,int *particle_number)
 				}		
 			}
 
-			if(CON->get_tool_type()!=2) for(int i=0;i<number;i++) Z[i]+=4*1e-3;//重心を移動
+			if(CON->get_tool_type()!=2) for(int i=0;i<number;i++) Z[i]+=2*1e-3;//重心を移動
 
 			if(CON->get_tool_angle()>0) 
 			{
@@ -1115,7 +1115,7 @@ void set_initial_placement_using_MD(mpsconfig *CON,int *particle_number)
 			int tool_number=number;
 			
 			//挿入時の解析は下の行をONにし、ツールの位置をあげる
-			if(calc_type==plunge) for(int i=0;i<number;i++) Z[i]+=2*1e-3;//重心を移動
+			if(calc_type==plunge) for(int i=0;i<number;i++) Z[i]+=4*1e-3;//重心を移動
 
 			/////////////////////////////流体作成
 			int fluid_number=0;
@@ -1363,7 +1363,7 @@ void set_initial_placement_using_MD(mpsconfig *CON,int *particle_number)
 								v=speed*(X[i]/r);
 								//if(Z[i]<Height && r>probe_R-0.3*le) uw=-pich*rps;//INWALLのうち、プローブの側面のみ(底面は除く)に下方向速度追加
 								if(calc_type==traverse) v+=U;//y方向にツールを移動
-								if(calc_type==plunge) uw-=U;//Z方向にツールを移動(plange phase)
+								else if(calc_type==plunge) uw-=U;//Z方向にツールを移動(plange phase)
 							}
 							if(r<=shold_R+le) AA=MOVE;
 							materialID=1;		

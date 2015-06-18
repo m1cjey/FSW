@@ -297,7 +297,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		//FSW方向転換
 		if(CON.get_process_type()==2)
 		{
-			double probe_H=0.5e-3;
+			double probe_H=4e-3;
 			double t_base=probe_H/CON.get_move_speed();		
 			double TIME1=dt*(t-1);
 			double TIME2=dt*t;
@@ -305,7 +305,7 @@ int _tmain(int argc, _TCHAR* argv[])
 			double U=CON.get_move_speed();
 			double V=CON.get_move_speed2();
 
-			if(t==2000)//(TIME1<=t_base&&TIME2>t_base)
+			if(t==1000)//(TIME1<=t_base&&TIME2>t_base)
 			{
 
 				for(int i=fluid_number;i<particle_number;i++)
@@ -2888,7 +2888,6 @@ void plot_speed_tool(mpsconfig *CON ,vector<mpsparticle> &PART,int particle_numb
 	double times=CON->get_speedtimes();
 	int d=CON->get_dimention();
 	int NUM;								//AVSに出力する粒子数
-	int startID=0;							//最初に出力する粒子のid
 	int num=0;								//数えあげ変数
 	int face=1;			//3D解析時のspeed.datの出力面 0=YZ平面 1=XZ 2=XY
 	int d1,d2,d3;							//3D解析時の出力に必要な次元
@@ -2903,7 +2902,6 @@ void plot_speed_tool(mpsconfig *CON ,vector<mpsparticle> &PART,int particle_numb
 		if(PART[i].toBEM==MOVE)
 		{
 			NUM++;
-			if(NUM==1)	startID=i;
 			I.push_back(i);
 		}
 	}
@@ -2914,7 +2912,7 @@ void plot_speed_tool(mpsconfig *CON ,vector<mpsparticle> &PART,int particle_numb
 	d1=A_X; d2=A_Z; d3=A_Y;
 	if(CON->get_ax_sym_modify()==OFF)
 	{
-		for(int i=startID;i<NUM;i++)
+		for(int i=0;i<NUM;i++)
 		{
 			int j=I[i];
 			if(PART[j].r[face]>-le && PART[j].r[face]<le)
@@ -2931,7 +2929,7 @@ void plot_speed_tool(mpsconfig *CON ,vector<mpsparticle> &PART,int particle_numb
 	}
 	else if(CON->get_ax_sym_modify()==ON)
 	{
-		for(int i=startID;i<NUM;i++)
+		for(int i=0;i<NUM;i++)
 		{
 			int j=I[i];
 			cout<<"i"<<j<<"	"<<"i"<<i<<endl;
@@ -2988,7 +2986,7 @@ void plot_speed_tool(mpsconfig *CON ,vector<mpsparticle> &PART,int particle_numb
 
 		if(CON->get_ax_sym_modify()==OFF)
 		{
-			for(int i=startID;i<NUM;i++)
+			for(int i=0;i<NUM;i++)
 			{
 				int j=I[i];
 				if(PART[j].r[face]>-le && PART[j].r[face]<le)
@@ -3005,7 +3003,7 @@ void plot_speed_tool(mpsconfig *CON ,vector<mpsparticle> &PART,int particle_numb
 		}
 		else if(CON->get_ax_sym_modify()==ON)
 		{
-			for(int i=startID;i<NUM;i++)
+			for(int i=0;i<NUM;i++)
 			{
 				int j=I[i];
 				if(PART[j].r[face]>-le && PART[j].r[face]<le)
@@ -3042,14 +3040,13 @@ void plot_speed_tool(mpsconfig *CON ,vector<mpsparticle> &PART,int particle_numb
 					}
 					else vec0<<x<<" "<<z<<" "<<u*times<<" "<<w*times<<endl;
 				}
-		}
-		//凡例出力
-		xmax+=4*le;//凡例を出す位置を保険をかけて少し斜めに移動
-		ymax+=4*le;
+			}
+			//凡例出力
+			xmax+=4*le;//凡例を出す位置を保険をかけて少し斜めに移動
+			ymax+=4*le;
 
-		if(CON->get_legend_speed()>0)	vec0<<xmax<<" "<<ymax<<" "<<CON->get_legend_speed()*times<<" "<<0*times<<endl;//最後に凡例出力	
-				
-		///////////////////
+			if(CON->get_legend_speed()>0)	vec0<<xmax<<" "<<ymax<<" "<<CON->get_legend_speed()*times<<" "<<0*times<<endl;//最後に凡例出力				
+			///////////////////
 		}
 		vec0.close();
 	}
@@ -6160,7 +6157,7 @@ void calc_vis_value(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_number,do
 	double *heat=new double [fluid_number];	//各粒子の発熱量格納[J]
 
 	//unsigned int timeA=GetTickCount();
-	//#pragma omp parallel for
+	#pragma omp parallel for
 	for(int i=0;i<fluid_number;i++)
 	{
 		double hs0=mass[i]*Cp[i]*MP[i];//融解開始点のエンタルピー
