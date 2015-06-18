@@ -1295,22 +1295,20 @@ void set_initial_placement_using_MD(mpsconfig *CON,int *particle_number)
 					
 						if(type1[i]==INWALL)
 						{
-							double speed=0;
 							double u=0;
 							double v=0;
 							double uw=0;
 							double r=sqrt(X[i]*X[i]+Y[i]*Y[i]);//ツールの中心が原点でないときは注意
 							int AA=1;
-							if(r>0.1*le && r<=shold_R+le && Z[i]>0)
+							if(r<=shold_R+le && Z[i]>0)
 							{
-								speed=r*w;
-								u=speed*(-Y[i]/r);
-								v=speed*(X[i]/r);
+								u=w*(-Y[i]);
+								v=w*(X[i]);
 								if(Z[i]<Height && r>probe_R-0.3*le) uw=-pich*rps;//INWALLのうち、プローブの側面のみ(底面は除く)に下方向速度追加
 								if(calc_type==traverse) v+=U;//y方向にツールを移動
 								else if(calc_type==plunge) uw-=U;//Z方向にツールを移動(plange phase)
+								AA=MOVE;
 							}
-							if(r<=shold_R+le && Z[i]>0) AA=MOVE;
 							materialID=1;		
 							writedata2(fq, count2, X[i],Y[i],Z[i], INWALL,materialID,OFF,0, u,v,uw,0,wall_h,AA);
 							count2++;
@@ -1320,22 +1318,20 @@ void set_initial_placement_using_MD(mpsconfig *CON,int *particle_number)
 					{
 						if(type1[i]==OUTWALL)
 						{
-							double speed=0;
 							double u=0;
 							double v=0;
 							double uw=0;
 							double r=sqrt(X[i]*X[i]+Y[i]*Y[i]);//ツールの中心が原点でないときは注意
 							int AA=1;
-							if(r>0.1*le && r<=shold_R+le && Z[i]>0)
+							if(r<=shold_R+le && Z[i]>0)
 							{
-								speed=r*w;
-								u=speed*(-Y[i]/r);
-								v=speed*(X[i]/r);
+								u=w*(-Y[i]);
+								v=w*(X[i]);
 								uw=-pich*rps;
 								if(calc_type==traverse) v+=U;//y方向にツールを移動
 								else if(calc_type==plunge) uw-=U;//Z方向にツールを移動(plange phase)
+								AA=MOVE;
 							}
-							if(r<=shold_R+le && Z[i]>0) AA=MOVE;
 							materialID=1;
 							writedata2(fq, count2, X[i],Y[i],Z[i], OUTWALL,materialID,OFF,0, u,v,uw,0,wall_h,AA);
 
@@ -1350,22 +1346,20 @@ void set_initial_placement_using_MD(mpsconfig *CON,int *particle_number)
 					
 						if(type1[i]==INWALL)
 						{
-							double speed=0;
 							double u=0;
 							double v=0;
 							double uw=0;
 							double r=sqrt(X[i]*X[i]+Y[i]*Y[i]);//ツールの中心が原点でないときは注意
 							int AA=1;
-							if(r>0.1*le && r<=shold_R+le)
+							if(r<=shold_R+le)
 							{
-								speed=r*w;
-								u=speed*(-Y[i]/r);
-								v=speed*(X[i]/r);
+								u=w*(-Y[i]);
+								v=w*(X[i]);
 								//if(Z[i]<Height && r>probe_R-0.3*le) uw=-pich*rps;//INWALLのうち、プローブの側面のみ(底面は除く)に下方向速度追加
 								if(calc_type==traverse) v+=U;//y方向にツールを移動
 								else if(calc_type==plunge) uw-=U;//Z方向にツールを移動(plange phase)
+								AA=MOVE;
 							}
-							if(r<=shold_R+le) AA=MOVE;
 							materialID=1;		
 							writedata2(fq, count2, X[i],Y[i],Z[i], INWALL,materialID,OFF,0, u,v,uw,0,wall_h,AA);
 							count2++;
@@ -1375,22 +1369,21 @@ void set_initial_placement_using_MD(mpsconfig *CON,int *particle_number)
 					{
 						if(type1[i]==OUTWALL)
 						{
-							double speed=0;
 							double u=0;
 							double v=0;
 							double uw=0;
 							double r=sqrt(X[i]*X[i]+Y[i]*Y[i]);//ツールの中心が原点でないときは注意
 							int AA=1;
-							if(r>0.1*le && r<=shold_R+le)
+
+							if(r<=shold_R+le)
 							{
-								speed=r*w;
-								u=speed*(-Y[i]/r);
-								v=speed*(X[i]/r);
+								u=w*(-Y[i]);
+								v=w*X[i];
 								uw=-pich*rps;
 								if(calc_type==traverse) v+=U;//y方向にツールを移動
 								else if(calc_type==plunge) uw-=U;//Z方向にツールを移動(plange phase)
+								AA=MOVE;
 							}
-							if(r<=shold_R+le) AA=MOVE;
 							materialID=1;
 							writedata2(fq, count2, X[i],Y[i],Z[i], OUTWALL,materialID,OFF,0, u,v,uw,0,wall_h,AA);
 
@@ -1407,7 +1400,6 @@ void set_initial_placement_using_MD(mpsconfig *CON,int *particle_number)
 				{
 					if(type1[i]==INWALL)
 					{
-						double speed=0;
 						double u=0;
 						double v=0;
 						double uw=0;
@@ -1416,11 +1408,10 @@ void set_initial_placement_using_MD(mpsconfig *CON,int *particle_number)
 						if(i<tool_number)
 						{
 							double r=sqrt(X3[i]*X3[i]+Y3[i]*Y3[i]);//ツールの中心が原点でないときは注意
-							if(r>0.1*le && r<=shold_R+le && Z3[i]>0)
+							if(r<=shold_R+le && Z3[i]>0)
 							{
-								speed=r*w;
-								u=speed*(-Y3[i]/r);
-								v=speed*(X3[i]/r);
+								u=w*(-Y3[i]);
+								v=w*X3[i];
 								if(Z[i]<Height && r>probe_R-0.3*le) uw=-pich*rps;//INWALLのうち、プローブの側面のみ(底面は除く)に下方向速度追加
 								//ここまでの速度条件は、ツールの回転と共に回転するので座標と同様に回転させる
 
@@ -1434,8 +1425,8 @@ void set_initial_placement_using_MD(mpsconfig *CON,int *particle_number)
 
 								if(calc_type==traverse) v+=U;//y方向にツールを移動
 								else if(calc_type==plunge) uw-=U;//Z方向にツールを移動(plange phase)
+								AA=MOVE;
 							}
-							if(r<=shold_R+le && Z3[i]>0) AA=MOVE;
 						}
 
 						materialID=1;		
@@ -1450,7 +1441,6 @@ void set_initial_placement_using_MD(mpsconfig *CON,int *particle_number)
 					if(type1[i]==OUTWALL)
 					{
 						//cout<<"out="<<i<<endl;
-						double speed=0;
 						double u=0;
 						double v=0;
 						double uw=0;
@@ -1461,11 +1451,10 @@ void set_initial_placement_using_MD(mpsconfig *CON,int *particle_number)
 						{
 							double r=sqrt(X3[i]*X3[i]+Y3[i]*Y3[i]);//ツールの中心が原点でないときは注意
 						
-							if(r>0.1*le && r<=shold_R+le && Z3[i]>0)
+							if(r<=shold_R+le && Z3[i]>0)
 							{
-								speed=r*w;
-								u=speed*(-Y3[i]/r);
-								v=speed*(X3[i]/r);
+								u=w*(-Y3[i]);
+								v=w*X3[i];
 								uw=-pich*rps;
 
 								double u_t=u;
@@ -1478,8 +1467,8 @@ void set_initial_placement_using_MD(mpsconfig *CON,int *particle_number)
 
 								if(calc_type==traverse) v+=U;//y方向にツールを移動
 								else if(calc_type==plunge) uw-=U;//Z方向にツールを移動(plange phase)
+								AA=MOVE;
 							}
-							if(r<=shold_R+le && Z3[i]>0) AA=MOVE;
 						}							
 						materialID=1;
 						writedata2(fq, count2, X[i],Y[i],Z[i], OUTWALL,materialID,OFF,0, u,v,uw,0,wall_h,AA);

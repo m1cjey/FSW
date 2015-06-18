@@ -7,7 +7,7 @@ mpsconfig::mpsconfig()
 {
 	///////解析条件
 	dt=5.0e-4;//0.0001;//0.000025*4;//////0.000025*10;//0.0005;//0.000025/2;//0.0000125    //jw法の場合、コイル周期の整数倍にすること         
-	step=4000;
+	step=15760;
 	dimention=3; 
 	
 	maxX=0.02;//0.1;//0.01;
@@ -93,8 +93,8 @@ mpsconfig::mpsconfig()
 	height=-0.004;//-0.004;//0.06;//0.102;//0.18;//0.005;    
 	tool_angle=0;//FSWにおいて、ツールを傾ける角度(弧度)
 	tool_type=0;//FSWにおける、ツール形状0:デフォルト(円柱)　1:円錐 2:円柱裏表
-	process_type=1;//FSWにおける過程選択		//0:plunge 1:traverse 2:plung→traverse
-	dwelling_time=0.0;//1.0;
+	process_type=2;//FSWにおける過程選択		//0:plunge 1:traverse 2:plung→traverse
+	dwelling_time=1.0;//1.0;
 	airwall=OFF;//IH釜において、流体上部に壁を配置するかどうか
 
 	///////粒子法用パラメータ

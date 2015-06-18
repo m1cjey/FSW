@@ -305,7 +305,7 @@ int _tmain(int argc, _TCHAR* argv[])
 			double U=CON.get_move_speed();
 			double V=CON.get_move_speed2();
 
-			if(t==1000)//(TIME1<=t_base&&TIME2>t_base)
+			if(t==8001)//(TIME1<=t_base&&TIME2>t_base)
 			{
 
 				for(int i=fluid_number;i<particle_number;i++)
@@ -319,13 +319,13 @@ int _tmain(int argc, _TCHAR* argv[])
 				
 			}
 
-			if(t_dw>0 && (TIME1<=t_base+t_dw)&&(TIME2>t_base+t_dw))
+			if(t_dw>0 && t==10000)//(TIME1<=t_base+t_dw)&&(TIME2>t_base+t_dw))
 			{
 				for(int i=fluid_number;i<particle_number;i++)	if(PART[i].toBEM==MOVE)	PART[i].u[A_Y]+=V;
 			}
 			
 		}
-		if(t==1||t%CON.get_interval()==0)plot_speed_tool(&CON,PART,particle_number,fluid_number,t);
+		//if(t==1||t%CON.get_interval()==0)plot_speed_tool(&CON,PART,particle_number,fluid_number,t);
 
 		//近隣粒子関係計算
 		calc_neighbor_relation(&CON,PART,particle_number,n0_4,fluid_number,out);
@@ -2909,7 +2909,8 @@ void plot_speed_tool(mpsconfig *CON ,vector<mpsparticle> &PART,int particle_numb
 	////////絶対速度出力
 	ofstream vec("speed_tool.dat");	
 	//int d1,d2;				//出力に必要な次元
-	d1=A_X; d2=A_Z; d3=A_Y;
+	/*d1=A_X; d2=A_Z; d3=A_Y;*/
+	d1=A_Y; d2=A_Z; d3=A_Y;
 	if(CON->get_ax_sym_modify()==OFF)
 	{
 		for(int i=0;i<NUM;i++)
