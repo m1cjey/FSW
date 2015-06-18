@@ -578,7 +578,7 @@ void surface_judge2_old(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_numbe
 		
 	for(int i=0;i<particle_number;i++)
     {
-       if(PART[i].type==FLUID ||PART[i].type==INWALL) PART[i].surface==ON;//粒子数密度による表面判定を用いない
+       if(PART[i].type==FLUID ||PART[i].type==INWALL) PART[i].surface=ON;//粒子数密度による表面判定を用いない
 	}
 	
     //////法線ﾍﾞｸﾄﾙ計算
@@ -804,7 +804,7 @@ void surface_judge2_new(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_numbe
 		
 	for(int i=0;i<particle_number;i++)
     {
-       if(PART[i].type==FLUID ||PART[i].type==INWALL) PART[i].surface==ON;//粒子数密度による表面判定を用いない
+       if(PART[i].type==FLUID ||PART[i].type==INWALL) PART[i].surface=ON;//粒子数密度による表面判定を用いない
 	}
 
     //////法線ﾍﾞｸﾄﾙ計算

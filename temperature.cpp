@@ -149,7 +149,7 @@ void calc_Temperature(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_number,
 		double width0=18*1e-3;//25*1e-3;//18*1e-3;//流体が占める幅
 		double Width=width0;		//横18mm+壁粒子を左右に4粒子分
 		double Height=6*1e-3;	//高さ6mm+壁粒子を下に4粒子分
-		double Depth=18e-3;//30*1e-3;//27*1e-3+6*le*A;	//奥行き27mm+壁粒子を左右に4粒子分
+		double Depth=36e-3;//18e-3;//30*1e-3;//27*1e-3+6*le*A;	//奥行き27mm+壁粒子を左右に4粒子分
 		double depth0=9e-3;				//ツール中心と、手前の壁との距離
 	
 		//double Z_mod=le*B+(1-sqrt(2.0)/2)*le;//ツールが流体へめり込むのを防ぐための調整量　この値だけツール以外の物体が下がる
@@ -229,7 +229,7 @@ void calc_Temperature(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_number,
     }
 
 	maxk/=densityCp;//熱拡散率
-	if(maxk*dt/(le*le)>0.2) cout<<"熱伝導率に関してdtが大きすぎる dt<"<<0.2*le*le/maxk<<"にしてください"<<endl;
+	if(maxk*dt/(le*le)>0.2) cout<<"熱伝導率に関してdtが大きすぎる dt<"<<0.2*le*le/maxk<<"にしてください"<<endl;	//理論的限界は0.5
 
 
     ////温度の拡散計算
@@ -527,6 +527,8 @@ void plot_T(mpsconfig *CON ,vector<mpsparticle> &PART,int particle_number,double
 //温度AVSファイル出力関数
 void output_temperature_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int particle_number,int fluid_number,double *T,double height)
 {
+	int flag_out_f=0;
+	int flag_out_b=0;
 	char filename[30];
 	char filename_n[30];
 	char filename_f[30];
@@ -545,6 +547,26 @@ void output_temperature_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 		shold_R*=cos(angle);
 	}
 
+
+	//FSW方向転換
+	if(CON->get_process_type()==2||CON->get_process_type()==0)
+	{
+		double probe_H=4*1e-3;
+		double t_base=probe_H/CON->get_move_speed();		
+		double TIME=CON->get_dt()*(t-1);
+		double t_dw=CON->get_dwelling_time();
+
+		if(TIME>=t_base)
+		{
+			if(CON->get_output_forward()==ON)	flag_out_f=ON;
+			if(CON->get_output_backward()==ON)	flag_out_b=ON;
+		}
+	}
+	else
+	{
+			if(CON->get_output_forward()==ON)	flag_out_f=ON;
+			if(CON->get_output_backward()==ON)	flag_out_b=ON;
+	}			
 	//t=1;//いまはわざと毎ステップ上書き
 	
 	//sprintf_s(filename,"pressure/pressure%d",t);//フォルダを作成して管理する場合はこちら
@@ -556,8 +578,8 @@ void output_temperature_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 			sprintf_s(filename_n,"T_XZ%d",t);
 			output_face_n=1;
 		}
-		if(CON->get_output_forward()==ON)	sprintf_s(filename_f,"T_YZ_forward%d",t);
-		if(CON->get_output_backward()==ON)	sprintf_s(filename_b,"T_YZ_backward%d",t);
+		if(flag_out_f==ON)	sprintf_s(filename_f,"T_YZ_forward%d",t);
+		if(flag_out_b==ON)	sprintf_s(filename_b,"T_YZ_backward%d",t);
 	}
 	else if(output_face==1)
 	{
@@ -567,14 +589,14 @@ void output_temperature_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 			sprintf_s(filename_n,"T_YZ%d",t);
 			output_face_n=0;
 		}
-		if(CON->get_output_forward()==ON)	sprintf_s(filename_f,"T_XZ_forward%d",t);
-		if(CON->get_output_backward()==ON)	sprintf_s(filename_b,"T_XZ_backward%d",t);
+		if(flag_out_f==ON)	sprintf_s(filename_f,"T_XZ_forward%d",t);
+		if(flag_out_b==ON)	sprintf_s(filename_b,"T_XZ_backward%d",t);
 	}
 	else if(output_face==2)
 	{
 		sprintf_s(filename,"T_XY%d",t);
-		if(CON->get_output_forward()==ON)	sprintf_s(filename_f,"T_XY_forward%d",t);
-		if(CON->get_output_backward()==ON)	sprintf_s(filename_b,"T_XY_backward%d",t);
+		if(flag_out_f==ON)	sprintf_s(filename_f,"T_XY_forward%d",t);
+		if(flag_out_b==ON)	sprintf_s(filename_b,"T_XY_backward%d",t);
 	}
 
 	ofstream fout(filename);
@@ -618,7 +640,7 @@ void output_temperature_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 					}
 				}
 
-				if(CON->get_output_forward()==ON)
+				if(flag_out_f==ON)
 				{
 					if(PART[i].r[output_face]<cross_section-shold_R+0.5*le && PART[i].r[output_face]>cross_section-shold_R-0.5*le)	
 					//if(PART[i].r[A_Y]<0.006+0.5*le && PART[i].r[A_Y]>0.006-0.5*le)	
@@ -632,7 +654,7 @@ void output_temperature_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 					}
 				}
 
-				if(CON->get_output_backward()==ON)
+				if(flag_out_b==ON)
 				{
 					if(PART[i].r[output_face]<cross_section+shold_R+0.5*le && PART[i].r[output_face]>cross_section+shold_R-0.5*le)	
 					//if(PART[i].r[A_Y]<0.006+0.5*le && PART[i].r[A_Y]>0.006-0.5*le)	
@@ -679,21 +701,21 @@ void output_temperature_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 	{
 		sprintf_s(filename,"T_YZ%d.fld",t);//他のファイルと同じ階層に生成するならこちら
 		if(CON->get_output_another_face()==ON)	sprintf_s(filename_n,"T_XZ%d.fld",t);
-		if(CON->get_output_forward()==ON)	sprintf_s(filename_f,"T_YZ_forward%d.fld",t);
-		if(CON->get_output_backward()==ON)	sprintf_s(filename_b,"T_YZ_backward%d.fld",t);
+		if(flag_out_f==ON)	sprintf_s(filename_f,"T_YZ_forward%d.fld",t);
+		if(flag_out_b==ON)	sprintf_s(filename_b,"T_YZ_backward%d.fld",t);
 	}
 	else if(output_face==1)
 	{
 		sprintf_s(filename,"T_XZ%d.fld",t);
 		if(CON->get_output_another_face()==ON)	sprintf_s(filename_n,"T_YZ%d.fld",t);
-		if(CON->get_output_forward()==ON)	sprintf_s(filename_f,"T_XZ_forward%d.fld",t);
-		if(CON->get_output_backward()==ON)	sprintf_s(filename_b,"T_XZ_backward%d.fld",t);
+		if(flag_out_f==ON)	sprintf_s(filename_f,"T_XZ_forward%d.fld",t);
+		if(flag_out_b==ON)	sprintf_s(filename_b,"T_XZ_backward%d.fld",t);
 	}
 	else if(output_face==2)
 	{
 		sprintf_s(filename,"T_XY%d.fld",t);
-		if(CON->get_output_forward()==ON)	sprintf_s(filename_f,"T_XY_forward%d.fld",t);
-		if(CON->get_output_backward()==ON)	sprintf_s(filename_b,"T_XY_backward%d.fld",t);
+		if(flag_out_f==ON)	sprintf_s(filename_f,"T_XY_forward%d.fld",t);
+		if(flag_out_b==ON)	sprintf_s(filename_b,"T_XY_backward%d.fld",t);
 	}
 
 	ofstream fout2(filename);
@@ -775,7 +797,7 @@ void output_temperature_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 	}
 
 	////////////////粘性分布出力_前方
-	if(CON->get_output_forward()==ON)
+	if(flag_out_f==ON)
 	{
 		fout_f2 << "# AVS field file" << endl;
 		fout_f2 << "ndim=1" << endl;
@@ -814,7 +836,7 @@ void output_temperature_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 	}
 
 	////////////温度分布出力＿後方
-	if(CON->get_output_backward()==ON)
+	if(flag_out_b==ON)
 	{
 		fout_b2 << "# AVS field file" << endl;
 		fout_b2 << "ndim=1" << endl;

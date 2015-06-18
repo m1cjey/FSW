@@ -14,6 +14,8 @@ public:
 	double old_A[DIMENTION];
 	double F[DIMENTION]; //粒子に働く電磁力
 	double potential[DIMENTION];//表面張力項//m/s2
+	
+
 
 	double P;//圧力
 	double h;//エンタルピー
@@ -22,8 +24,9 @@ public:
 	double val;//その都度適当な値の格納に利用
 	double T; //温度[K]
 	double L; //基準長さ 可変解像度粒子法関係で用いる。一定解像度の場合はleと同値
-	double vis;//粘性係数
+	double nensei;//粘性
 	double ep;//相当ひずみ率
+	double sigma;//相当流動応力
 	
 	int type;	//FLUID INWALL OUTWALL
 	int materialID;	//材質番号 1ならdensity,2ならdensity2などを使用

@@ -988,7 +988,12 @@ void set_initial_placement_using_MD(mpsconfig *CON,int *particle_number)
 		//calclation type
 		int plunge=0;
 		int traverse=1;
-		int calc_type=CON->get_process_type();		//0:plunge 1:traverse
+		int calc_type=0;
+		if(CON->get_process_type()==2)	calc_type=plunge;
+		else
+		{
+			calc_type=CON->get_process_type();//0:plunge 1:traverse
+		}
 		if(Dim==3)
 		{
 			///プローブ底面作成
@@ -1090,7 +1095,6 @@ void set_initial_placement_using_MD(mpsconfig *CON,int *particle_number)
 					X[i]=x;
 					Y[i]=y;
 					Z[i]=z;
-
 				}		
 			}
 
@@ -1120,7 +1124,7 @@ void set_initial_placement_using_MD(mpsconfig *CON,int *particle_number)
 			double Height=6*1e-3+4*le*B;	//高さ6mm+壁粒子を下に4粒子分
 			if(CON->get_tool_type()==2) Height=6*1e-3;	//表裏ツールの場合、下側の壁を取り払っているので壁粒子の設定の関係で下側に追加する必要がない
 
-			double Depth=18*1e-3+6*le*A;//27*1e-3+6*le*A;	//奥行き27mm+壁粒子を左右に4粒子分
+			double Depth=36*1e-3+6*le*A;//18*1e-3+6*le*A;//27*1e-3+6*le*A;	//奥行き27mm+壁粒子を左右に4粒子分
 			double depth0=9e-3;				//ツール中心と、手前の壁との距離
 			int BOX_startID=0;				//set_box()開始前の粒子数
 			set_box(X2,Y2,Z2,surface2,&fluid_number,le,Width,Height,Depth);//最後3つの引数は横、高さ、奥行き。デカルト座標の原点に対し、X正方向に横幅、Y正方向に奥行き、Z正方向に高さ
@@ -1429,7 +1433,7 @@ void set_initial_placement_using_MD(mpsconfig *CON,int *particle_number)
 								uw=uw_t;
 
 								if(calc_type==traverse) v+=U;//y方向にツールを移動
-								if(calc_type==plunge) uw-=U;//Z方向にツールを移動(plange phase)
+								else if(calc_type==plunge) uw-=U;//Z方向にツールを移動(plange phase)
 							}
 							if(r<=shold_R+le && Z3[i]>0) AA=MOVE;
 						}

@@ -55,6 +55,7 @@ class mpsconfig
 	double tool_angle;//FSWにおいて、ツールを傾ける角度
 	int tool_type;
 	int process_type;
+	double dwelling_time;
 	int airwall;
 	
 	///////粒子法用パラメータ
@@ -330,6 +331,7 @@ class mpsconfig
 	double get_tool_angle() {return tool_angle;}
 	int    get_tool_type() {return tool_type;}
 	int	get_process_type()	{return process_type;}
+	double get_dwelling_time(){return dwelling_time;}
 	int    get_airwall() {return airwall;}
 	
 	double get_re()		{return re;}

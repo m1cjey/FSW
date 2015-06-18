@@ -6,8 +6,8 @@
 mpsconfig::mpsconfig()
 {
 	///////解析条件
-	dt=1.0e-4;//0.0001;//0.000025*4;//////0.000025*10;//0.0005;//0.000025/2;//0.0000125    //jw法の場合、コイル周期の整数倍にすること         
-	step=40000;
+	dt=5.0e-4;//0.0001;//0.000025*4;//////0.000025*10;//0.0005;//0.000025/2;//0.0000125    //jw法の場合、コイル周期の整数倍にすること         
+	step=4000;
 	dimention=3; 
 	
 	maxX=0.02;//0.1;//0.01;
@@ -94,6 +94,7 @@ mpsconfig::mpsconfig()
 	tool_angle=0;//FSWにおいて、ツールを傾ける角度(弧度)
 	tool_type=0;//FSWにおける、ツール形状0:デフォルト(円柱)　1:円錐 2:円柱裏表
 	process_type=2;//FSWにおける過程選択		//0:plunge 1:traverse 2:plung→traverse
+	dwelling_time=0.0;//1.0;
 	airwall=OFF;//IH釜において、流体上部に壁を配置するかどうか
 
 	///////粒子法用パラメータ
@@ -166,7 +167,7 @@ mpsconfig::mpsconfig()
 	T_CGep=1.0e-3;			//収束判定
 	buoyant=OFF;			//浮力(密度のブジネスク近似)  1=ON 0=OFF
 	TplotZ=0.004;			//3D解析において、XY平面の温度を出力するときのＺ座標
-	T_AVS=100;				//microAVS用の温度ファイルを出力するstep間隔。0ならOFF
+	T_AVS=1000;				//microAVS用の温度ファイルを出力するstep間隔。0ならOFF
 	output_temperature_face=1;	//0=YZ平面 1=XZ平面	2=XY平面
 
 	////////電磁力計算
