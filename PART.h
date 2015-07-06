@@ -24,7 +24,7 @@ public:
 	double val;//その都度適当な値の格納に利用
 	double T; //温度[K]
 	double L; //基準長さ 可変解像度粒子法関係で用いる。一定解像度の場合はleと同値
-	double nensei;//粘性
+	double vis;//粘性
 	double ep;//相当ひずみ率
 	double sigma;//相当流動応力
 	

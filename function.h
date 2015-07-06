@@ -59,7 +59,7 @@ void visterm_negative(mpsconfig *CON,vector<mpsparticle> &PART,double *laplacian
 void u_laplacian_f(mpsconfig *CON,vector<mpsparticle> &PART,double *laplacian[DIMENTION],double n0,double lamda,int fluid_number,double dt);
 void calc_viscous_term(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_number,int particle_number,double dt,double N0,double *laplacian[DIMENTION],double lamda,int t);
 void calc_vis_value(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_number,double *vis,double dt,int t,int particle_number);
-void output_viscousity_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int particle_number,int fluid_number);
+void output_viscousity_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int particle_number,int fluid_number,double*vis);
 void output_flow_stress_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int particle_number,int fluid_number);
 void output_equivalent_strain_rate_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int particle_number,int fluid_number);
 void physical_quantity_movie_AVS(mpsconfig *CON,int t,vector<mpsparticle>&PART,int particle_number);
@@ -166,7 +166,7 @@ void output_temperature_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 void set_temperature_boundary(mpsconfig *CON, vector<mpsparticle> &PART, int fluid_number, int particle_number, double *T,double dt,int t);
 void set_Q_boundary(mpsconfig *CON, vector<mpsparticle> &PART, int fluid_number, int particle_number, double dt,int t);
 
-void move_particle(mpsconfig *CON,vector<mpsparticle> &PART,int particle_number,int fluid_number,double dt);
+void move_particle(mpsconfig *CON,vector<mpsparticle> &PART,int particle_number,int fluid_number,double dt,int t);
 void check_something(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_number,double n0,int particle_number,int t);
 
 //ÉfÉçÅ[Éjï™äÑ

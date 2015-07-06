@@ -57,6 +57,7 @@ class mpsconfig
 	int process_type;
 	double dwelling_time;
 	int airwall;
+	int change_step;
 	
 	///////粒子法用パラメータ
 	
@@ -333,6 +334,7 @@ class mpsconfig
 	int	get_process_type()	{return process_type;}
 	double get_dwelling_time(){return dwelling_time;}
 	int    get_airwall() {return airwall;}
+	int get_change_step(){return change_step;}
 	
 	double get_re()		{return re;}
 	double get_re2()	{return re2;}

@@ -294,38 +294,6 @@ int _tmain(int argc, _TCHAR* argv[])
 		
 		////////////////////陽解析/////////////////////////////
 
-		//FSW方向転換
-		if(CON.get_process_type()==2)
-		{
-			double probe_H=4e-3;
-			double t_base=probe_H/CON.get_move_speed();		
-			double TIME1=dt*(t-1);
-			double TIME2=dt*t;
-			double t_dw=CON.get_dwelling_time();
-			double U=CON.get_move_speed();
-			double V=CON.get_move_speed2();
-
-			if(t==8001)//(TIME1<=t_base&&TIME2>t_base)
-			{
-
-				for(int i=fluid_number;i<particle_number;i++)
-				{
-					if(PART[i].toBEM==MOVE)
-					{
-						PART[i].u[A_Z]+=U;					
-						if(t_dw==0)		PART[i].u[A_Y]+=V;						
-					}
-				}
-				
-			}
-
-			if(t_dw>0 && t==10000)//(TIME1<=t_base+t_dw)&&(TIME2>t_base+t_dw))
-			{
-				for(int i=fluid_number;i<particle_number;i++)	if(PART[i].toBEM==MOVE)	PART[i].u[A_Y]+=V;
-			}
-			
-		}
-		//if(t==1||t%CON.get_interval()==0)plot_speed_tool(&CON,PART,particle_number,fluid_number,t);
 
 		//近隣粒子関係計算
 		calc_neighbor_relation(&CON,PART,particle_number,n0_4,fluid_number,out);
@@ -575,7 +543,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		////*/
 		
 		//移動粒子を移動させる場合
-		if(CON.get_move_prtcl()==ON) move_particle(&CON,PART,particle_number,fluid_number,dt);
+		if(CON.get_move_prtcl()==ON) move_particle(&CON,PART,particle_number,fluid_number,dt,t);
 
 		if(CON.get_modify_position()!=OFF) modify_position(&CON,PART, fluid_number,dt,particle_number);
 		
@@ -1188,7 +1156,7 @@ void post_processing(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_number,i
 	///速度をプロット
 //	plot_speed(CON ,PART,particle_number,fluid_number);
 	plot_speed_each(CON ,PART,particle_number,fluid_number,t);	
-	if(t==1||t%CON->get_T_AVS()==0)	physical_quantity_movie_AVS(CON,t,PART,particle_number);
+	if(t==1||t%CON->get_interval()==0)	physical_quantity_movie_AVS(CON,t,PART,particle_number);
 
 	//////座標ﾌﾟﾛｯﾄ/////////////////////////
 	//////座標ﾌﾟﾛｯﾄ/////////////////////////
@@ -2587,7 +2555,7 @@ void plot_speed_each(mpsconfig *CON ,vector<mpsparticle> &PART,int particle_numb
 	vec.close();
 
 
-	if(t==1||t%CON->get_interval()==0)
+	if(t==1||t%CON->get_T_AVS()==0)
 	{
 		char filename[30];
 		char filename_n[30];
@@ -3478,14 +3446,15 @@ void visterm_negative(mpsconfig *CON,vector<mpsparticle> &PART,double *laplacian
 			for(int i=0;i<particle_number;i++)
 			{
 				PART[i].sigma=0;
-				PART[i].nensei=0;
+				PART[i].vis=0;
 			}
 		}
+
 		calc_vis_value(CON,PART,fluid_number,vis,dt,t,particle_number);//FSWモデルの場合
 
 		if(t==1||t%CON->get_T_AVS()==0)
 		{
-			output_viscousity_avs(CON,PART,t,particle_number,fluid_number);
+			output_viscousity_avs(CON,PART,t,particle_number,fluid_number,vis);
 			output_flow_stress_avs(CON,PART,t,particle_number,fluid_number);
 		}
 	}
@@ -6158,7 +6127,7 @@ void calc_vis_value(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_number,do
 	double *heat=new double [fluid_number];	//各粒子の発熱量格納[J]
 
 	//unsigned int timeA=GetTickCount();
-	#pragma omp parallel for
+	//#pragma omp parallel for
 	for(int i=0;i<fluid_number;i++)
 	{
 		double hs0=mass[i]*Cp[i]*MP[i];//融解開始点のエンタルピー
@@ -6207,10 +6176,9 @@ void calc_vis_value(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_number,do
 		PART[i].sigma=sigma[i];
 
 		if(ep[i]>0) nensei=sigma[i]/(3*ep[i]);
-		PART[i].nensei=nensei;
 
 		vis[i]=nensei/density[i];					//動粘性係数
-
+		PART[i].vis=vis[i];
 		//温度場を考慮するなら、粘性による発熱を計算する。
 		//heat[i]=V*sigma[i]*ep[i]*dt*co;//塑性仕事増分dW=σ(dε)のco%が熱になると仮定	
 		//PART[i].h+=heat[i];
@@ -6280,10 +6248,10 @@ void calc_vis_value(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_number,do
 }
 
 //粘性AVSファイル出力関数
-void output_viscousity_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int particle_number,int fluid_number)
+void output_viscousity_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int particle_number,int fluid_number,double *vis)
 {
-	int flag_out_f=0;
-	int flag_out_b=0;
+	int flag_out_f=OFF;
+	int flag_out_b=OFF;
 	char filename[30];
 	char filename_n[30];
 	char filename_f[30];
@@ -6303,6 +6271,7 @@ void output_viscousity_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int pa
 	}
 
 	//FSW方向転換
+	/*
 	if(CON->get_process_type()==2||CON->get_process_type()==0)
 	{
 		double probe_H=4*1e-3;
@@ -6312,15 +6281,16 @@ void output_viscousity_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int pa
 
 		if(TIME>=t_base)
 		{
-			if(CON->get_output_forward()==ON)	flag_out_f=ON;
+			//if(CON->get_output_forward()==ON)	flag_out_f=ON;
 			if(CON->get_output_backward()==ON)	flag_out_b=ON;
 		}
 	}
 	else
 	{
-			if(CON->get_output_forward()==ON)	flag_out_f=ON;
+			//if(CON->get_output_forward()==ON)	flag_out_f=ON;
 			if(CON->get_output_backward()==ON)	flag_out_b=ON;
 	}			
+	*/
 
 
 	//t=1;//いまはわざと毎ステップ上書き
@@ -6377,7 +6347,7 @@ void output_viscousity_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int pa
 					double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
 					double y=PART[i].r[A_Y]*1.0E+05;
 					double z=PART[i].r[A_Z]*1.0E+05;
-					double P=PART[i].nensei;
+					double P=vis[i];
 					fout << P << "\t" << x << "\t" << y << "\t" << z << endl;
 					n++;
 				}
@@ -6390,7 +6360,7 @@ void output_viscousity_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int pa
 						double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
 						double y=PART[i].r[A_Y]*1.0E+05;
 						double z=PART[i].r[A_Z]*1.0E+05;
-						double P=PART[i].nensei;
+						double P=vis[i];
 						fout_n << P << "\t" << x << "\t" << y << "\t" << z << endl;
 						nn++;
 					}
@@ -6404,7 +6374,7 @@ void output_viscousity_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int pa
 						double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
 						double y=PART[i].r[A_Y]*1.0E+05;
 						double z=PART[i].r[A_Z]*1.0E+05;
-						double P=PART[i].nensei;
+						double P=vis[i];
 						fout_f << P << "\t" << x << "\t" << y << "\t" << z << endl;
 						nf++;
 					}
@@ -6418,7 +6388,7 @@ void output_viscousity_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int pa
 						double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
 						double y=PART[i].r[A_Y]*1.0E+05;
 						double z=PART[i].r[A_Z]*1.0E+05;
-						double P=PART[i].nensei;
+						double P=vis[i];
 						fout_b << P << "\t" << x << "\t" << y << "\t" << z << endl;
 						nb++;
 					}
@@ -6439,7 +6409,7 @@ void output_viscousity_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int pa
 				//double x=PART[i].r[A_X];//*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
 				//double y=PART[i].r[A_Y];//*1.0E+05;
 				//double z=PART[i].r[A_Z];//*1.0E+05;
-				double P=PART[i].nensei;
+				double P=vis[i];
 				//double P=PART[i].heat_gene_before1;
 				fout << P << "\t" << x << "\t" << y << "\t" << z << endl;
 				n++;
@@ -6634,8 +6604,8 @@ void output_viscousity_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int pa
 //相当流動応力出力関数
 void output_flow_stress_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int particle_number,int fluid_number)
 {
-	int flag_out_f=0;
-	int flag_out_b=0;
+	int flag_out_f=OFF;
+	int flag_out_b=OFF;
 	char filename[30];
 	char filename_n[30];
 	char filename_f[30];
@@ -6655,7 +6625,8 @@ void output_flow_stress_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 	}
 
 	//FSW方向転換
-	if(CON->get_process_type()==2||CON->get_process_type()==0)
+	/*
+	if(CON->get_process_type()==2||CON->get_process_type()==1)
 	{
 		double probe_H=4*1e-3;
 		double t_base=probe_H/CON->get_move_speed();		
@@ -6664,15 +6635,15 @@ void output_flow_stress_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 
 		if(TIME>=t_base)
 		{
-			if(CON->get_output_forward()==ON)	flag_out_f=ON;
+			//if(CON->get_output_forward()==ON)	flag_out_f=ON;
 			if(CON->get_output_backward()==ON)	flag_out_b=ON;
 		}
 	}
 	else
 	{
-			if(CON->get_output_forward()==ON)	flag_out_f=ON;
+			//if(CON->get_output_forward()==ON)	flag_out_f=ON;
 			if(CON->get_output_backward()==ON)	flag_out_b=ON;
-	}			
+	}			*/
 
 
 	//t=1;//いまはわざと毎ステップ上書き
@@ -6717,84 +6688,61 @@ void output_flow_stress_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 		exit(EXIT_FAILURE);
 	}
 
-	if(CON->get_dimention()==3)
+	for(int i=0;i<particle_number;i++)
 	{
-		for(int i=0;i<particle_number;i++)
+		if(PART[i].type==FLUID)
 		{
-			if(PART[i].type==FLUID)
+			if(PART[i].r[output_face]<cross_section+0.5*le && PART[i].r[output_face]>cross_section-0.5*le)	
+			//if(PART[i].r[A_Y]<0.006+0.5*le && PART[i].r[A_Y]>0.006-0.5*le)	
 			{
-				if(PART[i].r[output_face]<cross_section+0.5*le && PART[i].r[output_face]>cross_section-0.5*le)	
+				double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
+				double y=PART[i].r[A_Y]*1.0E+05;
+				double z=PART[i].r[A_Z]*1.0E+05;
+				double P=PART[i].sigma;
+				fout << P << "\t" << x << "\t" << y << "\t" << z << endl;
+				n++;
+			}
+
+			if(CON->get_output_another_face()==ON)
+			{
+				if(PART[i].r[output_face_n]<cross_section+0.5*le && PART[i].r[output_face_n]>cross_section-0.5*le)	
 				//if(PART[i].r[A_Y]<0.006+0.5*le && PART[i].r[A_Y]>0.006-0.5*le)	
 				{
 					double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
 					double y=PART[i].r[A_Y]*1.0E+05;
 					double z=PART[i].r[A_Z]*1.0E+05;
 					double P=PART[i].sigma;
-					fout << P << "\t" << x << "\t" << y << "\t" << z << endl;
-					n++;
-				}
-
-				if(CON->get_output_another_face()==ON)
-				{
-					if(PART[i].r[output_face_n]<cross_section+0.5*le && PART[i].r[output_face_n]>cross_section-0.5*le)	
-					//if(PART[i].r[A_Y]<0.006+0.5*le && PART[i].r[A_Y]>0.006-0.5*le)	
-					{
-						double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
-						double y=PART[i].r[A_Y]*1.0E+05;
-						double z=PART[i].r[A_Z]*1.0E+05;
-						double P=PART[i].sigma;
-						fout_n << P << "\t" << x << "\t" << y << "\t" << z << endl;
-						nn++;
-					}
-				}
-
-				if(flag_out_f==ON)
-				{
-					if(PART[i].r[output_face]<cross_section-shold_R+0.5*le && PART[i].r[output_face]>cross_section-shold_R-0.5*le)	
-					//if(PART[i].r[A_Y]<0.006+0.5*le && PART[i].r[A_Y]>0.006-0.5*le)	
-					{
-						double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
-						double y=PART[i].r[A_Y]*1.0E+05;
-						double z=PART[i].r[A_Z]*1.0E+05;
-						double P=PART[i].sigma;
-						fout_f << P << "\t" << x << "\t" << y << "\t" << z << endl;
-						nf++;
-					}
-				}
-
-				if(flag_out_b==ON)
-				{
-					if(PART[i].r[output_face]<cross_section+shold_R+0.5*le && PART[i].r[output_face]>cross_section+shold_R-0.5*le)	
-					//if(PART[i].r[A_Y]<0.006+0.5*le && PART[i].r[A_Y]>0.006-0.5*le)	
-					{
-						double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
-						double y=PART[i].r[A_Y]*1.0E+05;
-						double z=PART[i].r[A_Z]*1.0E+05;
-						double P=PART[i].sigma;
-						fout_b << P << "\t" << x << "\t" << y << "\t" << z << endl;
-						nb++;
-					}
+					fout_n << P << "\t" << x << "\t" << y << "\t" << z << endl;
+					nn++;
 				}
 			}
-		}
-	}
-	else if(CON->get_dimention()==2)
-	{
-		for(int i=0;i<particle_number;i++)
-		{
-			if(PART[i].type!=FLUID)
-			{
-				double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
-				double y=PART[i].r[A_Y]*1.0E+05;
-				double z=PART[i].r[A_Z]*1.0E+05;
 
-				//double x=PART[i].r[A_X];//*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
-				//double y=PART[i].r[A_Y];//*1.0E+05;
-				//double z=PART[i].r[A_Z];//*1.0E+05;
-				double P=PART[i].sigma;
-				//double P=PART[i].heat_gene_before1;
-				fout << P << "\t" << x << "\t" << y << "\t" << z << endl;
-				n++;
+			if(flag_out_f==ON)
+			{
+				if(PART[i].r[output_face]<cross_section+shold_R+0.5*le && PART[i].r[output_face]>cross_section+shold_R-0.5*le)	
+				//if(PART[i].r[A_Y]<0.006+0.5*le && PART[i].r[A_Y]>0.006-0.5*le)	
+				{
+					double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
+					double y=PART[i].r[A_Y]*1.0E+05;
+					double z=PART[i].r[A_Z]*1.0E+05;
+					double P=PART[i].sigma;
+					fout_f << P << "\t" << x << "\t" << y << "\t" << z << endl;
+					nf++;
+				}
+			}
+
+			if(flag_out_b==ON)
+			{
+				if(PART[i].r[output_face]<cross_section-shold_R+0.5*le && PART[i].r[output_face]>cross_section-shold_R-0.5*le)	
+				//if(PART[i].r[A_Y]<0.006+0.5*le && PART[i].r[A_Y]>0.006-0.5*le)	
+				{
+					double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
+					double y=PART[i].r[A_Y]*1.0E+05;
+					double z=PART[i].r[A_Z]*1.0E+05;
+					double P=PART[i].sigma;
+					fout_b << P << "\t" << x << "\t" << y << "\t" << z << endl;
+					nb++;
+				}
 			}
 		}
 	}
@@ -7009,9 +6957,9 @@ void physical_quantity_movie_AVS(mpsconfig *CON,int t,vector<mpsparticle> &PART,
 
 	//mainファイル書き込み
 	ofstream fp("physical_quantity_movie_YZ.inp",ios :: app);
-	fp<<"step"<<t/CON->get_interval()+1<<" TIME="<<TIME<<endl;
+	fp<<"step"<<t/CON->get_interval()+1<<endl;
 	ofstream fp2("physical_quantity_movie_XZ.inp",ios::app);
-	fp2<<"step"<<t/CON->get_interval()+1<<" TIME="<<TIME<<endl;
+	fp2<<"step"<<t/CON->get_interval()+1<<endl;
 
 	//出力粒子数算出
 	int n=0;//表示する粒子数
@@ -7065,19 +7013,19 @@ void physical_quantity_movie_AVS(mpsconfig *CON,int t,vector<mpsparticle> &PART,
 
 	//要素番号と要素形状の種類、そして要素を構成する節点番号出力
 	for(int i=0;i<n;i++)	fp<<i<<"  0 pt "<<i<<endl;
-	for(int i=0;i<n2;i++)fp2<<i<<" 0 pt "<<i<<endl;
+	for(int i=0;i<n2;i++)	fp2<<i<<" 0 pt "<<i<<endl;
 
 	//fp<<"2 3"<<endl;//節点の情報量が2で、要素の情報量が3ということ。
 	fp<<"3 0"<<endl;//節点の情報量が8で、要素の情報量が0ということ。
 	fp<<"3 1 1 1"<<endl;	//この行の詳細はヘルプを参照
 	fp<<"T_YZ,"<<endl;
-	fp<<"nensei_YZ,"<<endl;
+	fp<<"vis_YZ,"<<endl;
 	fp<<"sigma_YZ,"<<endl;
 
 	fp2<<"3 0"<<endl;//節点の情報量が8で、要素の情報量が0ということ。
 	fp2<<"3 1 1 1"<<endl;	//この行の詳細はヘルプを参照
 	fp2<<"T_XZ,"<<endl;
-	fp2<<"nensei_XZ,"<<endl;
+	fp2<<"vis_XZ,"<<endl;
 	fp2<<"sigma_XZ,"<<endl;
 
 	//各節点の情報値入力
@@ -7087,12 +7035,12 @@ void physical_quantity_movie_AVS(mpsconfig *CON,int t,vector<mpsparticle> &PART,
 	{
 		if(input[i]==ON)
 		{
-			fp<<count<<" "<<PART[i].T<<" "<<PART[i].nensei<<" "<<PART[i].sigma<<"\n";
+			fp<<count<<" "<<PART[i].T<<" "<<PART[i].vis<<" "<<PART[i].sigma<<"\n";
 			count++;
 		}
 		if(input2[i]==ON)
 		{
-			fp2<<count2<<" "<<PART[i].T<<" "<<PART[i].nensei<<" "<<PART[i].sigma<<"\n";
+			fp2<<count2<<" "<<PART[i].T<<" "<<PART[i].vis<<" "<<PART[i].sigma<<"\n";
 			count2++;
 		}
 	}
@@ -7190,27 +7138,70 @@ void calc_physical_property(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_n
 }
 
 ///移動粒子移動関数
-void move_particle(mpsconfig *CON,vector<mpsparticle> &PART,int particle_number,int fluid_number,double dt)
+void move_particle(mpsconfig *CON,vector<mpsparticle> &PART,int particle_number,int fluid_number,double dt,int t)
 {
 	cout<<"移動壁粒子を移動"<<endl;
+	
 	int direction=CON->get_move_u_dirct();	//移動粒子を移動させる方向 現在は±X方向=±1,±Y方向=±2,±Z方向=±3
-	double speed=CON->get_move_speed();		//移動粒子の移動速度[m/s]
-	int D;									//移動方向の本プログラムにおける対応する次元 A_X=0;A_Y=1;A_Z=2;
+	double speed=CON->get_move_speed();		//移動粒子の移動速度[m/s]		
 
-	if(direction>0) D=direction-1;
-	else if(direction<0)
-	{
-		D=-direction-1;
-		speed*=-1;				//速度を反転
-	}
 
-	for(int i=fluid_number;i<particle_number;i++)
+	if(CON->get_model_number()==19&&CON->get_process_type()==2)
 	{
-		if(PART[i].toBEM==MOVE)
+		int change_step=CON->get_change_step();
+		if(t<change_step)
 		{
-			PART[i].r[D]+=speed*dt;//粒子を移動
+			int D=-direction-1;									//移動方向の本プログラムにおける対応する次元 A_X=0;A_Y=1;A_Z=2;			
+			speed*=-1;								//速度を反転
+								
+			for(int i=fluid_number;i<particle_number;i++)
+			{
+				if(PART[i].toBEM==MOVE)
+				{
+					PART[i].r[D]+=speed*dt;//粒子を移動
+				}
+			}
+		}
+		else if (t>=change_step)
+		{
+			int dwell_time=CON->get_dwelling_time();
+			int dwell_step=dwell_time/dt;
+
+			if(t>dwell_step+change_step)
+			{
+			int D=1;
+			double speed2=CON->get_move_speed2();
+
+				for(int i=fluid_number;i<particle_number;i++)
+				{
+					if(PART[i].toBEM==MOVE)
+					{
+						PART[i].r[D]+=speed2*dt;//粒子を移動
+					}
+				}
+			}
+		}
+	}			
+	else
+	{
+	
+		int D;									//移動方向の本プログラムにおける対応する次元 A_X=0;A_Y=1;A_Z=2;
+		if(direction>0) D=direction-1;
+		else if(direction<0)
+		{
+			D=-direction-1;
+			speed*=-1;				//速度を反転
+		}
+		for(int i=fluid_number;i<particle_number;i++)
+		{
+			if(PART[i].toBEM==MOVE)
+			{
+
+				PART[i].r[D]+=speed*dt;//粒子を移動
+			}
 		}
 	}
+
 }
 
 ///特殊ファイル出力関数

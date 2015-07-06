@@ -7,7 +7,7 @@ mpsconfig::mpsconfig()
 {
 	///////解析条件
 	dt=5.0e-4;//0.0001;//0.000025*4;//////0.000025*10;//0.0005;//0.000025/2;//0.0000125    //jw法の場合、コイル周期の整数倍にすること         
-	step=15760;
+	step=13760;
 	dimention=3; 
 	
 	maxX=0.02;//0.1;//0.01;
@@ -92,9 +92,10 @@ mpsconfig::mpsconfig()
 	wlength=2;
 	height=-0.004;//-0.004;//0.06;//0.102;//0.18;//0.005;    
 	tool_angle=0;//FSWにおいて、ツールを傾ける角度(弧度)
-	tool_type=0;//FSWにおける、ツール形状0:デフォルト(円柱)　1:円錐 2:円柱裏表
+	tool_type=1;//FSWにおける、ツール形状0:デフォルト(円柱)　1:円錐 2:円柱裏表
 	process_type=2;//FSWにおける過程選択		//0:plunge 1:traverse 2:plung→traverse
-	dwelling_time=1.0;//1.0;
+	dwelling_time=0.0;//1.0;
+	change_step=8000;
 	airwall=OFF;//IH釜において、流体上部に壁を配置するかどうか
 
 	///////粒子法用パラメータ
@@ -282,9 +283,9 @@ mpsconfig::mpsconfig()
 	adaptive_sw=OFF;		//解像度を可変にするか、しないか 1=ON 0=OFF
 	threshold=1;//1e-3;			//アダプティブにする際の、圧力誤差の閾値
 	fix_surface=0;			//表面流体を固定するかどうか
-	output_forward=ON;
+	output_forward=OFF;
 	output_backward=ON;
-	output_another_face=ON;
+	output_another_face=OFF;
 
 	model_number=19;
 	model_set_way=1;		//modelをセットする方法　0=正方格子 1=MD
@@ -309,7 +310,7 @@ mpsconfig::mpsconfig()
 	MAX_thread=512;			//ひとつのSMあたりの最大ｽﾚｯﾄﾞ数　ふつうは512
 
 	///////ﾌｧｲﾙ出力変数 
-	interval=100;//20;			//２以上の整数にすること
+	interval=200;//20;			//２以上の整数にすること
 	AVS=6;                  //0:普通　1:圧力　2:温度 3:壁非表示 4：表面のみ 5:壁(in,outの区別つき) 6:特定
 	maxT=343;
 	minT=293;
