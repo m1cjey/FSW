@@ -7,7 +7,7 @@ mpsconfig::mpsconfig()
 {
 	///////解析条件
 	dt=5.0e-4;//0.0001;//0.000025*4;//////0.000025*10;//0.0005;//0.000025/2;//0.0000125    //jw法の場合、コイル周期の整数倍にすること         
-	step=13760;
+	step=12000;
 	dimention=3; 
 	
 	maxX=0.02;//0.1;//0.01;
@@ -283,9 +283,9 @@ mpsconfig::mpsconfig()
 	adaptive_sw=OFF;		//解像度を可変にするか、しないか 1=ON 0=OFF
 	threshold=1;//1e-3;			//アダプティブにする際の、圧力誤差の閾値
 	fix_surface=0;			//表面流体を固定するかどうか
-	output_forward=OFF;
+	output_forward=ON;
 	output_backward=ON;
-	output_another_face=OFF;
+	output_another_face=ON;
 
 	model_number=19;
 	model_set_way=1;		//modelをセットする方法　0=正方格子 1=MD
@@ -299,7 +299,7 @@ mpsconfig::mpsconfig()
 	speed_face_p=0.0;//-1.0e-3;//0.006;//0.0;		//3D解析時のspeed.datの出力面の座標
 	ax_sym_modify=OFF;		//3D時のspeed.datに関して、軸対称による出力修正を行うか否か　1=ON 0=OF
 	flat_speed_plot=OFF;	//OFF//水平方向の速度(XY面)をﾌﾟﾛｯﾄするかしないか1=ON 0=OFF		//speed_eachにXY平面の出力を付け加えたため不要かも
-	flat_speed_p=-1.0e-3;		//0.004//flat_speed.datの出力面の座標	////speed_eachにXY平面の出力を付け加えたため不要かも
+	flat_speed_p=0;		//0.004//flat_speed.datの出力面の座標	////speed_eachにXY平面の出力を付け加えたため不要かも
 	relative_speed=OFF;		//重心に対する相対速度を出力するかしないか 1=ON 0=OFF
 	speed_AVS=ON;			//microAVSによる3D速度分布出力するかしないか 1=ON 0=OFF
 	legend_speed=0.1;		//speed.datの凡例に出力する速度[m/s]
