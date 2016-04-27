@@ -91,8 +91,8 @@ mpsconfig::mpsconfig()
 	distancebp=0.0005;//0.001;//0.0015;//0.002;//0.001;//0.0005
 	wlength=2;
 	height=-0.004;//-0.004;//0.06;//0.102;//0.18;//0.005;    
-	tool_angle=0;//FSWにおいて、ツールを傾ける角度(弧度)
-	tool_type=1;//FSWにおける、ツール形状0:デフォルト(円柱)　1:円錐 2:円柱裏表
+	tool_angle=3;//FSWにおいて、ツールを傾ける角度(弧度)
+	tool_type=0;//FSWにおける、ツール形状0:デフォルト(円柱)　1:円錐 2:円柱裏表
 	process_type=2;//FSWにおける過程選択		//0:plunge 1:traverse 2:plung→traverse
 	dwelling_time=0.0;//1.0;
 	change_step=8000;
@@ -310,7 +310,7 @@ mpsconfig::mpsconfig()
 	MAX_thread=512;			//ひとつのSMあたりの最大ｽﾚｯﾄﾞ数　ふつうは512
 
 	///////ﾌｧｲﾙ出力変数 
-	interval=200;//20;			//２以上の整数にすること
+	interval=1000;//20;			//２以上の整数にすること
 	AVS=6;                  //0:普通　1:圧力　2:温度 3:壁非表示 4：表面のみ 5:壁(in,outの区別つき) 6:特定
 	maxT=343;
 	minT=293;

@@ -530,7 +530,6 @@ void output_temperature_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 	int flag_out_f=0;
 	int flag_out_b=0;
 	char filename[30];
-	char filename_n[30];
 	char filename_f[30];
 	char filename_b[30];
 	int n=0,nn=0,nf=0,nb=0;
@@ -706,7 +705,7 @@ void output_temperature_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 	}
 	else if(output_face==1)
 	{
-		if(CON->get_output_another_face()==ON)	sprintf_s(filename_n,"T_YZ%d.fld",t);
+		if(CON->get_output_another_face()==ON)	sprintf_s(filename,"T_YZ%d.fld",t);
 		if(flag_out_f==ON)	sprintf_s(filename_f,"T_XZ_forward%d.fld",t);
 		if(flag_out_b==ON)	sprintf_s(filename_b,"T_XZ_backward%d.fld",t);
 	}
@@ -744,12 +743,12 @@ void output_temperature_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 		fout2 << "coord    2 file=T_YZ" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//‘¼‚Ìƒtƒ@ƒCƒ‹‚Æ“¯‚¶ŠK‘w‚É¶¬‚·‚é‚È‚ç‚±‚¿‚ç
 		fout2 << "coord    3 file=T_YZ" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//‘¼‚Ìƒtƒ@ƒCƒ‹‚Æ“¯‚¶ŠK‘w‚É¶¬‚·‚é‚È‚ç‚±‚¿‚ç
 	}
-	if(output_face==1)
+	if(output_face==1&&CON->get_output_another_face()==ON)
 	{
-		fout2 << "variable 1 file=T_XZ" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//‘¼‚Ìƒtƒ@ƒCƒ‹‚Æ“¯‚¶ŠK‘w‚É¶¬‚·‚é‚È‚ç‚±‚¿‚ç
-		fout2 << "coord    1 file=T_XZ" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//‘¼‚Ìƒtƒ@ƒCƒ‹‚Æ“¯‚¶ŠK‘w‚É¶¬‚·‚é‚È‚ç‚±‚¿‚ç
-		fout2 << "coord    2 file=T_XZ" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//‘¼‚Ìƒtƒ@ƒCƒ‹‚Æ“¯‚¶ŠK‘w‚É¶¬‚·‚é‚È‚ç‚±‚¿‚ç
-		fout2 << "coord    3 file=T_XZ" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//‘¼‚Ìƒtƒ@ƒCƒ‹‚Æ“¯‚¶ŠK‘w‚É¶¬‚·‚é‚È‚ç‚±‚¿‚ç
+		fout2 << "variable 1 file=T_YZ" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//‘¼‚Ìƒtƒ@ƒCƒ‹‚Æ“¯‚¶ŠK‘w‚É¶¬‚·‚é‚È‚ç‚±‚¿‚ç
+		fout2 << "coord    1 file=T_YZ" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//‘¼‚Ìƒtƒ@ƒCƒ‹‚Æ“¯‚¶ŠK‘w‚É¶¬‚·‚é‚È‚ç‚±‚¿‚ç
+		fout2 << "coord    2 file=T_YZ" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//‘¼‚Ìƒtƒ@ƒCƒ‹‚Æ“¯‚¶ŠK‘w‚É¶¬‚·‚é‚È‚ç‚±‚¿‚ç
+		fout2 << "coord    3 file=T_YZ" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//‘¼‚Ìƒtƒ@ƒCƒ‹‚Æ“¯‚¶ŠK‘w‚É¶¬‚·‚é‚È‚ç‚±‚¿‚ç
 	}
 	if(output_face==2)
 	{
@@ -807,12 +806,12 @@ void output_temperature_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 		//fout2 << "coord    1 file=./pressure" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//ƒtƒHƒ‹ƒ_‚ðì¬‚µ‚ÄŠÇ—‚·‚éê‡‚Í‚±‚¿‚ç
 		//fout2 << "coord    2 file=./pressure" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//ƒtƒHƒ‹ƒ_‚ðì¬‚µ‚ÄŠÇ—‚·‚éê‡‚Í‚±‚¿‚ç
 		//fout2 << "coord    3 file=./pressure" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//ƒtƒHƒ‹ƒ_‚ðì¬‚µ‚ÄŠÇ—‚·‚éê‡‚Í‚±‚¿‚ç
-		if(output_face==0)
+		if(output_face==0&&CON->get_output_another_face()==ON)
 		{
-			fout_f2 << "variable 1 file=T_YZ_forward" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//‘¼‚Ìƒtƒ@ƒCƒ‹‚Æ“¯‚¶ŠK‘w‚É¶¬‚·‚é‚È‚ç‚±‚¿‚ç
-			fout_f2 << "coord    1 file=T_YZ_forward" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//‘¼‚Ìƒtƒ@ƒCƒ‹‚Æ“¯‚¶ŠK‘w‚É¶¬‚·‚é‚È‚ç‚±‚¿‚ç
-			fout_f2 << "coord    2 file=T_YZ_forward" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//‘¼‚Ìƒtƒ@ƒCƒ‹‚Æ“¯‚¶ŠK‘w‚É¶¬‚·‚é‚È‚ç‚±‚¿‚ç
-			fout_f2 << "coord    3 file=T_YZ_forward" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//‘¼‚Ìƒtƒ@ƒCƒ‹‚Æ“¯‚¶ŠK‘w‚É¶¬‚·‚é‚È‚ç‚±‚¿‚ç
+			fout_f2 << "variable 1 file=T_XZ_forward" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//‘¼‚Ìƒtƒ@ƒCƒ‹‚Æ“¯‚¶ŠK‘w‚É¶¬‚·‚é‚È‚ç‚±‚¿‚ç
+			fout_f2 << "coord    1 file=T_XZ_forward" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//‘¼‚Ìƒtƒ@ƒCƒ‹‚Æ“¯‚¶ŠK‘w‚É¶¬‚·‚é‚È‚ç‚±‚¿‚ç
+			fout_f2 << "coord    2 file=T_XZ_forward" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//‘¼‚Ìƒtƒ@ƒCƒ‹‚Æ“¯‚¶ŠK‘w‚É¶¬‚·‚é‚È‚ç‚±‚¿‚ç
+			fout_f2 << "coord    3 file=T_XZ_forward" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//‘¼‚Ìƒtƒ@ƒCƒ‹‚Æ“¯‚¶ŠK‘w‚É¶¬‚·‚é‚È‚ç‚±‚¿‚ç
 		}
 		else if(output_face==1)
 		{
@@ -820,13 +819,6 @@ void output_temperature_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 			fout_f2 << "coord    1 file=T_XZ_forward" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//‘¼‚Ìƒtƒ@ƒCƒ‹‚Æ“¯‚¶ŠK‘w‚É¶¬‚·‚é‚È‚ç‚±‚¿‚ç
 			fout_f2 << "coord    2 file=T_XZ_forward" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//‘¼‚Ìƒtƒ@ƒCƒ‹‚Æ“¯‚¶ŠK‘w‚É¶¬‚·‚é‚È‚ç‚±‚¿‚ç
 			fout_f2 << "coord    3 file=T_XZ_forward" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//‘¼‚Ìƒtƒ@ƒCƒ‹‚Æ“¯‚¶ŠK‘w‚É¶¬‚·‚é‚È‚ç‚±‚¿‚ç
-		}
-		else if(output_face==2)
-		{
-			fout_f2 << "variable 1 file=T_XY_forward" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//‘¼‚Ìƒtƒ@ƒCƒ‹‚Æ“¯‚¶ŠK‘w‚É¶¬‚·‚é‚È‚ç‚±‚¿‚ç
-			fout_f2 << "coord    1 file=T_XY_forward" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//‘¼‚Ìƒtƒ@ƒCƒ‹‚Æ“¯‚¶ŠK‘w‚É¶¬‚·‚é‚È‚ç‚±‚¿‚ç
-			fout_f2 << "coord    2 file=T_XY_forward" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//‘¼‚Ìƒtƒ@ƒCƒ‹‚Æ“¯‚¶ŠK‘w‚É¶¬‚·‚é‚È‚ç‚±‚¿‚ç
-			fout_f2 << "coord    3 file=T_XY_forward" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//‘¼‚Ìƒtƒ@ƒCƒ‹‚Æ“¯‚¶ŠK‘w‚É¶¬‚·‚é‚È‚ç‚±‚¿‚ç
 		}
 		fout_f2.close();
 	}
@@ -846,12 +838,12 @@ void output_temperature_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 		//fout2 << "coord    1 file=./pressure" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//ƒtƒHƒ‹ƒ_‚ðì¬‚µ‚ÄŠÇ—‚·‚éê‡‚Í‚±‚¿‚ç
 		//fout2 << "coord    2 file=./pressure" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//ƒtƒHƒ‹ƒ_‚ðì¬‚µ‚ÄŠÇ—‚·‚éê‡‚Í‚±‚¿‚ç
 		//fout2 << "coord    3 file=./pressure" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//ƒtƒHƒ‹ƒ_‚ðì¬‚µ‚ÄŠÇ—‚·‚éê‡‚Í‚±‚¿‚ç
-		if(output_face==0)
+		if(output_face==0&&CON->get_output_another_face()==ON)
 		{
-			fout_b2 << "variable 1 file=T_YZ_backward" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//‘¼‚Ìƒtƒ@ƒCƒ‹‚Æ“¯‚¶ŠK‘w‚É¶¬‚·‚é‚È‚ç‚±‚¿‚ç
-			fout_b2 << "coord    1 file=T_YZ_backward" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//‘¼‚Ìƒtƒ@ƒCƒ‹‚Æ“¯‚¶ŠK‘w‚É¶¬‚·‚é‚È‚ç‚±‚¿‚ç
-			fout_b2 << "coord    2 file=T_YZ_backward" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//‘¼‚Ìƒtƒ@ƒCƒ‹‚Æ“¯‚¶ŠK‘w‚É¶¬‚·‚é‚È‚ç‚±‚¿‚ç
-			fout_b2 << "coord    3 file=T_YZ_backward" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//‘¼‚Ìƒtƒ@ƒCƒ‹‚Æ“¯‚¶ŠK‘w‚É¶¬‚·‚é‚È‚ç‚±‚¿‚ç
+			fout_b2 << "variable 1 file=T_XZ_backward" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//‘¼‚Ìƒtƒ@ƒCƒ‹‚Æ“¯‚¶ŠK‘w‚É¶¬‚·‚é‚È‚ç‚±‚¿‚ç
+			fout_b2 << "coord    1 file=T_XZ_backward" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//‘¼‚Ìƒtƒ@ƒCƒ‹‚Æ“¯‚¶ŠK‘w‚É¶¬‚·‚é‚È‚ç‚±‚¿‚ç
+			fout_b2 << "coord    2 file=T_XZ_backward" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//‘¼‚Ìƒtƒ@ƒCƒ‹‚Æ“¯‚¶ŠK‘w‚É¶¬‚·‚é‚È‚ç‚±‚¿‚ç
+			fout_b2 << "coord    3 file=T_XZ_backward" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//‘¼‚Ìƒtƒ@ƒCƒ‹‚Æ“¯‚¶ŠK‘w‚É¶¬‚·‚é‚È‚ç‚±‚¿‚ç
 		}
 		else if(output_face==1)
 		{
@@ -859,13 +851,6 @@ void output_temperature_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 			fout_b2 << "coord    1 file=T_XZ_backward" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//‘¼‚Ìƒtƒ@ƒCƒ‹‚Æ“¯‚¶ŠK‘w‚É¶¬‚·‚é‚È‚ç‚±‚¿‚ç
 			fout_b2 << "coord    2 file=T_XZ_backward" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//‘¼‚Ìƒtƒ@ƒCƒ‹‚Æ“¯‚¶ŠK‘w‚É¶¬‚·‚é‚È‚ç‚±‚¿‚ç
 			fout_b2 << "coord    3 file=T_XZ_backward" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//‘¼‚Ìƒtƒ@ƒCƒ‹‚Æ“¯‚¶ŠK‘w‚É¶¬‚·‚é‚È‚ç‚±‚¿‚ç
-		}
-		else if(output_face==2)
-		{
-			fout_b2 << "variable 1 file=T_XY_backward" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//‘¼‚Ìƒtƒ@ƒCƒ‹‚Æ“¯‚¶ŠK‘w‚É¶¬‚·‚é‚È‚ç‚±‚¿‚ç
-			fout_b2 << "coord    1 file=T_XY_backward" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//‘¼‚Ìƒtƒ@ƒCƒ‹‚Æ“¯‚¶ŠK‘w‚É¶¬‚·‚é‚È‚ç‚±‚¿‚ç
-			fout_b2 << "coord    2 file=T_XY_backward" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//‘¼‚Ìƒtƒ@ƒCƒ‹‚Æ“¯‚¶ŠK‘w‚É¶¬‚·‚é‚È‚ç‚±‚¿‚ç
-			fout_b2 << "coord    3 file=T_XY_backward" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//‘¼‚Ìƒtƒ@ƒCƒ‹‚Æ“¯‚¶ŠK‘w‚É¶¬‚·‚é‚È‚ç‚±‚¿‚ç
 		}
 		fout_b2.close();
 	}
