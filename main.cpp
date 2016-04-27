@@ -1141,7 +1141,7 @@ void post_processing(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_number,i
 	
 	//cout<<"粒子avsデータ出力開始----";
 	
-/*	if(CON->get_curan()==0) if(t==1 || t%CON->get_interval()==0) particle_movie_AVS(CON,PART,fluid_number,particle_number,t,TIME);
+	if(CON->get_curan()==0) if(t==1 || t%CON->get_interval()==0) particle_movie_AVS(CON,PART,fluid_number,particle_number,t,TIME);
 	else if(CON->get_curan()>0)
 	{
 		if(t==1 || TIME>CON->get_interval()*dt*count_avs) particle_movie_AVS(CON,PART,fluid_number,particle_number,t,TIME);
