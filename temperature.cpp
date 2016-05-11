@@ -547,6 +547,17 @@ void output_temperature_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 		shold_R*=cos(angle);
 	}
 
+	//èoóÕñ ÇÃà⁄ìÆ
+	if(CON->get_process_type()==1||CON->get_process_type()==2)
+	{
+		double dt=CON->get_dt();
+		int dwell_step=CON->get_dwelling_time()/dt;
+		int change_step=CON->get_change_step();
+		double speed2=CON->get_move_speed2();
+
+		if(t>dwell_step+change_step)	output_face+=speed2*dt*(t-dwell_step-change_step);
+	}
+
 
 	//FSWï˚å¸ì]ä∑
 	if(CON->get_process_type()==2||CON->get_process_type()==0)
@@ -583,7 +594,7 @@ void output_temperature_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 	}
 	else if(output_face==1)
 	{
-		sprintf_s(filename,"T_XZ%d",t);
+	//	sprintf_s(filename,"T_XZ%d",t);
 		if(CON->get_output_another_face()==ON)
 		{
 			sprintf_s(filename_n,"T_YZ%d",t);
@@ -599,15 +610,15 @@ void output_temperature_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 		if(flag_out_b==ON)	sprintf_s(filename_b,"T_XY_backward%d",t);
 	}
 
-	ofstream fout(filename);
+//	ofstream fout(filename);
 	ofstream	fout_n(filename_n);
 	ofstream	fout_f(filename_f);
 	ofstream	fout_b(filename_b);
-	if(!fout)
+/*	if(!fout)
 	{
 		cout << "cannot open" << filename << endl;
 		exit(EXIT_FAILURE);
-	}
+	}*/
 
 	if(CON->get_dimention()==3)
 	{
@@ -615,8 +626,8 @@ void output_temperature_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 		{
 			if(PART[i].type==FLUID)
 			{
-				if(PART[i].r[output_face]<cross_section+0.5*le && PART[i].r[output_face]>cross_section-0.5*le)	
-				//if(PART[i].r[A_Y]<0.006+0.5*le && PART[i].r[A_Y]>0.006-0.5*le)	
+/*				if(PART[i].r[output_face]<cross_section+le && PART[i].r[output_face]>cross_section-le)	
+				//if(PART[i].r[A_Y]<0.006+le && PART[i].r[A_Y]>0.006-le)	
 				{
 					double x=PART[i].r[A_X]*1.0E+05;	//rÇÕîÒèÌÇ…è¨Ç≥Ç¢ílÇ»ÇÃÇ≈10^5î{ÇµÇƒÇ®Ç≠
 					double y=PART[i].r[A_Y]*1.0E+05;
@@ -624,12 +635,12 @@ void output_temperature_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 					double P=T[i];
 					fout << P << "\t" << x << "\t" << y << "\t" << z << endl;
 					n++;
-				}
+				}*/
 
 				if(CON->get_output_another_face()==ON)
 				{
-					if(PART[i].r[output_face_n]<cross_section+0.5*le && PART[i].r[output_face_n]>cross_section-0.5*le)	
-					//if(PART[i].r[A_Y]<0.006+0.5*le && PART[i].r[A_Y]>0.006-0.5*le)	
+					if(PART[i].r[output_face_n]<cross_section+le && PART[i].r[output_face_n]>cross_section-le)	
+					//if(PART[i].r[A_Y]<0.006+le && PART[i].r[A_Y]>0.006-le)	
 					{
 						double x=PART[i].r[A_X]*1.0E+05;	//rÇÕîÒèÌÇ…è¨Ç≥Ç¢ílÇ»ÇÃÇ≈10^5î{ÇµÇƒÇ®Ç≠
 						double y=PART[i].r[A_Y]*1.0E+05;
@@ -642,8 +653,8 @@ void output_temperature_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 
 				if(flag_out_f==ON)
 				{
-					if(PART[i].r[output_face]<cross_section-shold_R+0.5*le && PART[i].r[output_face]>cross_section-shold_R-0.5*le)	
-					//if(PART[i].r[A_Y]<0.006+0.5*le && PART[i].r[A_Y]>0.006-0.5*le)	
+					if(PART[i].r[output_face]<cross_section-shold_R+le && PART[i].r[output_face]>cross_section-shold_R-le)	
+					//if(PART[i].r[A_Y]<0.006+le && PART[i].r[A_Y]>0.006-le)	
 					{
 						double x=PART[i].r[A_X]*1.0E+05;	//rÇÕîÒèÌÇ…è¨Ç≥Ç¢ílÇ»ÇÃÇ≈10^5î{ÇµÇƒÇ®Ç≠
 						double y=PART[i].r[A_Y]*1.0E+05;
@@ -656,8 +667,8 @@ void output_temperature_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 
 				if(flag_out_b==ON)
 				{
-					if(PART[i].r[output_face]<cross_section+shold_R+0.5*le && PART[i].r[output_face]>cross_section+shold_R-0.5*le)	
-					//if(PART[i].r[A_Y]<0.006+0.5*le && PART[i].r[A_Y]>0.006-0.5*le)	
+					if(PART[i].r[output_face]<cross_section+shold_R+le && PART[i].r[output_face]>cross_section+shold_R-le)	
+					//if(PART[i].r[A_Y]<0.006+le && PART[i].r[A_Y]>0.006-le)	
 					{
 						double x=PART[i].r[A_X]*1.0E+05;	//rÇÕîÒèÌÇ…è¨Ç≥Ç¢ílÇ»ÇÃÇ≈10^5î{ÇµÇƒÇ®Ç≠
 						double y=PART[i].r[A_Y]*1.0E+05;
@@ -670,7 +681,7 @@ void output_temperature_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 			}
 		}
 	}
-	else if(CON->get_dimention()==2)
+/*	else if(CON->get_dimention()==2)
 	{
 		for(int i=0;i<particle_number;i++)
 		{
@@ -689,8 +700,8 @@ void output_temperature_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 				n++;
 			}
 		}
-	}
-	fout.close();
+	}*/
+//	fout.close();
 	fout_n.close();
 	fout_b.close();
 	fout_f.close();
@@ -706,7 +717,7 @@ void output_temperature_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 	}
 	else if(output_face==1)
 	{
-		sprintf_s(filename,"T_XZ%d.fld",t);
+	//	sprintf_s(filename,"T_XZ%d.fld",t);
 		if(CON->get_output_another_face()==ON)	sprintf_s(filename_n,"T_YZ%d.fld",t);
 		if(flag_out_f==ON)	sprintf_s(filename_f,"T_XZ_forward%d.fld",t);
 		if(flag_out_b==ON)	sprintf_s(filename_b,"T_XZ_backward%d.fld",t);
@@ -718,11 +729,11 @@ void output_temperature_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 		if(flag_out_b==ON)	sprintf_s(filename_b,"T_XY_backward%d.fld",t);
 	}
 
-	ofstream fout2(filename);
+//	ofstream fout2(filename);
 	ofstream fout_n2(filename_n);
 	ofstream fout_f2(filename_f);
 	ofstream fout_b2(filename_b);
-	if(!fout2)
+/*	if(!fout2)
 	{
 		cout << "cannot open" << filename << endl;
 		exit(EXIT_FAILURE);
@@ -762,7 +773,7 @@ void output_temperature_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 		fout2 << "coord    2 file=T_XY" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//ëºÇÃÉtÉ@ÉCÉãÇ∆ìØÇ∂äKëwÇ…ê∂ê¨Ç∑ÇÈÇ»ÇÁÇ±ÇøÇÁ
 		fout2 << "coord    3 file=T_XY" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//ëºÇÃÉtÉ@ÉCÉãÇ∆ìØÇ∂äKëwÇ…ê∂ê¨Ç∑ÇÈÇ»ÇÁÇ±ÇøÇÁ
 	}
-	fout2.close();
+	fout2.close();*/
 
 	///////////////////â∑ìxï™ïzèoóÕ_ëºífñ 
 	if(CON->get_output_another_face()==ON)

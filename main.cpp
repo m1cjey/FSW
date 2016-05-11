@@ -2465,6 +2465,16 @@ void plot_speed_each(mpsconfig *CON ,vector<mpsparticle> &PART,int particle_numb
 	double xmax=-100;						//出力粒子の最大横座標
 	double ymax=-100;						//出力粒子の最大縦座標
 	
+	//出力面の移動
+	if(CON->get_process_type()==1||CON->get_process_type()==2)
+	{
+		double dt=CON->get_dt();
+		int dwell_step=CON->get_dwelling_time()/dt;
+		int change_step=CON->get_change_step();
+		double speed2=CON->get_move_speed2();
+
+		if(t>dwell_step+change_step)	face_p+=speed2*dt*(t-dwell_step-change_step);
+	}
 
 	//AVS出力粒子数NUM計算
 	if(CON->get_speed_plot_particle()==1) NUM=particle_number;	//全粒子出力
@@ -6214,14 +6224,14 @@ void calc_vis_value(mpsconfig *CON,vector<mpsparticle> &PART,int fluid_number,do
 		ofstream ft("sigma.dat");
 		for(int i=0;i<fluid_number;i++)
 		{
-			if(PART[i].r[A_Z]>0.004-0.5*le && PART[i].r[A_Z]<0.004+0.5*le)
+			if(PART[i].r[A_Z]>0.004-le && PART[i].r[A_Z]<0.004+le)
 			{
 				fp<<PART[i].r[A_X]<<"\t"<<PART[i].r[A_Y]<<"\t"<<vis[i]<<endl;
 				fr<<PART[i].r[A_X]<<"\t"<<PART[i].r[A_Y]<<"\t"<<heat[i]/V<<endl;//単位体積あたりの発熱量を出力[J/m3]
 				fs<<PART[i].r[A_X]<<"\t"<<PART[i].r[A_Y]<<"\t"<<ep[i]<<endl;//単位体積あたりの発熱量を出力[J/m3]
 				ft<<PART[i].r[A_X]<<"\t"<<PART[i].r[A_Y]<<"\t"<<sigma[i]<<endl;//単位体積あたりの発熱量を出力[J/m3]
 			}
-			if(PART[i].r[A_Y]>-0.5*le && PART[i].r[A_Y]<0.5*le) fq<<PART[i].r[A_X]<<"\t"<<PART[i].r[A_Z]<<"\t"<<vis[i]<<endl;
+			if(PART[i].r[A_Y]>-le && PART[i].r[A_Y]<le) fq<<PART[i].r[A_X]<<"\t"<<PART[i].r[A_Z]<<"\t"<<vis[i]<<endl;
 		}
 		fp.close();
 		fq.close();
@@ -6270,6 +6280,18 @@ void output_viscousity_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int pa
 		shold_R*=cos(angle);
 	}
 
+	//出力面の移動
+	if(CON->get_process_type()==1||CON->get_process_type()==2)
+	{
+		double dt=CON->get_dt();
+		int dwell_step=CON->get_dwelling_time()/dt;
+		int change_step=CON->get_change_step();
+		double speed2=CON->get_move_speed2();
+
+		if(t>dwell_step+change_step)	output_face+=speed2*dt*(t-dwell_step-change_step);
+	}
+
+
 	//FSW方向転換
 	/*
 	if(CON->get_process_type()==2||CON->get_process_type()==0)
@@ -6309,7 +6331,7 @@ void output_viscousity_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int pa
 	}
 	else if(output_face==1)
 	{
-		sprintf_s(filename,"vis_XZ%d",t);
+//		sprintf_s(filename,"vis_XZ%d",t);
 		if(CON->get_output_another_face()==ON)
 		{
 			sprintf_s(filename_n,"vis_YZ%d",t);
@@ -6325,15 +6347,15 @@ void output_viscousity_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int pa
 		if(flag_out_b==ON)	sprintf_s(filename_b,"vis_XY_backward%d",t);
 	}
 
-	ofstream fout(filename);
+//	ofstream fout(filename);
 	ofstream	fout_n(filename_n);
 	ofstream	fout_f(filename_f);
 	ofstream	fout_b(filename_b);
-	if(!fout)
+/*	if(!fout)
 	{
 		cout << "cannot open" << filename << endl;
 		exit(EXIT_FAILURE);
-	}
+	}*/
 
 	if(CON->get_dimention()==3)
 	{
@@ -6341,8 +6363,8 @@ void output_viscousity_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int pa
 		{
 			if(PART[i].type==FLUID)
 			{
-				if(PART[i].r[output_face]<cross_section+0.5*le && PART[i].r[output_face]>cross_section-0.5*le)	
-				//if(PART[i].r[A_Y]<0.006+0.5*le && PART[i].r[A_Y]>0.006-0.5*le)	
+	/*			if(PART[i].r[output_face]<cross_section+le && PART[i].r[output_face]>cross_section-le)	
+				//if(PART[i].r[A_Y]<0.006+le && PART[i].r[A_Y]>0.006-le)	
 				{
 					double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
 					double y=PART[i].r[A_Y]*1.0E+05;
@@ -6350,12 +6372,12 @@ void output_viscousity_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int pa
 					double P=vis[i];
 					fout << P << "\t" << x << "\t" << y << "\t" << z << endl;
 					n++;
-				}
+				}*/
 
 				if(CON->get_output_another_face()==ON)
 				{
-					if(PART[i].r[output_face_n]<cross_section+0.5*le && PART[i].r[output_face_n]>cross_section-0.5*le)	
-					//if(PART[i].r[A_Y]<0.006+0.5*le && PART[i].r[A_Y]>0.006-0.5*le)	
+					if(PART[i].r[output_face_n]<cross_section+le && PART[i].r[output_face_n]>cross_section-le)	
+					//if(PART[i].r[A_Y]<0.006+le && PART[i].r[A_Y]>0.006-le)	
 					{
 						double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
 						double y=PART[i].r[A_Y]*1.0E+05;
@@ -6368,8 +6390,8 @@ void output_viscousity_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int pa
 
 				if(flag_out_f==ON)
 				{
-					if(PART[i].r[output_face]<cross_section-shold_R+0.5*le && PART[i].r[output_face]>cross_section-shold_R-0.5*le)	
-					//if(PART[i].r[A_Y]<0.006+0.5*le && PART[i].r[A_Y]>0.006-0.5*le)	
+					if(PART[i].r[output_face]<cross_section-shold_R+le && PART[i].r[output_face]>cross_section-shold_R-le)	
+					//if(PART[i].r[A_Y]<0.006+le && PART[i].r[A_Y]>0.006-le)	
 					{
 						double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
 						double y=PART[i].r[A_Y]*1.0E+05;
@@ -6382,8 +6404,8 @@ void output_viscousity_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int pa
 
 				if(flag_out_b==ON)
 				{
-					if(PART[i].r[output_face]<cross_section+shold_R+0.5*le && PART[i].r[output_face]>cross_section+shold_R-0.5*le)	
-					//if(PART[i].r[A_Y]<0.006+0.5*le && PART[i].r[A_Y]>0.006-0.5*le)	
+					if(PART[i].r[output_face]<cross_section+shold_R+le && PART[i].r[output_face]>cross_section+shold_R-le)	
+					//if(PART[i].r[A_Y]<0.006+le && PART[i].r[A_Y]>0.006-le)	
 					{
 						double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
 						double y=PART[i].r[A_Y]*1.0E+05;
@@ -6396,7 +6418,7 @@ void output_viscousity_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int pa
 			}
 		}
 	}
-	else if(CON->get_dimention()==2)
+/*	else if(CON->get_dimention()==2)
 	{
 		for(int i=0;i<particle_number;i++)
 		{
@@ -6415,8 +6437,8 @@ void output_viscousity_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int pa
 				n++;
 			}
 		}
-	}
-	fout.close();
+	}*/
+//	fout.close();
 	fout_n.close();
 	fout_b.close();
 	fout_f.close();
@@ -6432,7 +6454,7 @@ void output_viscousity_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int pa
 	}
 	else if(output_face==1)
 	{
-		sprintf_s(filename,"vis_XZ%d.fld",t);
+//		sprintf_s(filename,"vis_XZ%d.fld",t);
 		if(CON->get_output_another_face()==ON)	sprintf_s(filename_n,"vis_YZ%d.fld",t);
 		if(flag_out_f==ON)	sprintf_s(filename_f,"vis_XZ_forward%d.fld",t);
 		if(flag_out_b==ON)	sprintf_s(filename_b,"vis_XZ_backward%d.fld",t);
@@ -6444,11 +6466,11 @@ void output_viscousity_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int pa
 		if(flag_out_b==ON)	sprintf_s(filename_b,"vis_XY_backward%d.fld",t);
 	}
 
-	ofstream fout2(filename);
+//	ofstream fout2(filename);
 	ofstream fout_n2(filename_n);
 	ofstream fout_f2(filename_f);
 	ofstream fout_b2(filename_b);
-	if(!fout2)
+/*	if(!fout2)
 	{
 		cout << "cannot open" << filename << endl;
 		exit(EXIT_FAILURE);
@@ -6488,7 +6510,7 @@ void output_viscousity_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int pa
 		fout2 << "coord    2 file=vis_XY" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
 		fout2 << "coord    3 file=vis_XY" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
 	}
-	fout2.close();
+	fout2.close();*/
 
 	///////////////////粘性分布出力_他断面
 	if(CON->get_output_another_face()==ON)
@@ -6624,6 +6646,18 @@ void output_flow_stress_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 		shold_R*=cos(angle);
 	}
 
+	//出力面の移動
+	if(CON->get_process_type()==1||CON->get_process_type()==2)
+	{
+		double dt=CON->get_dt();
+		int dwell_step=CON->get_dwelling_time()/dt;
+		int change_step=CON->get_change_step();
+		double speed2=CON->get_move_speed2();
+
+		if(t>dwell_step+change_step)	output_face+=speed2*dt*(t-dwell_step-change_step);
+	}
+
+
 	//FSW方向転換
 	/*
 	if(CON->get_process_type()==2||CON->get_process_type()==1)
@@ -6646,13 +6680,12 @@ void output_flow_stress_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 	}			*/
 
 
-	//t=1;//いまはわざと毎ステップ上書き
-	
-	//sprintf_s(filename,"pressure/pressure%d",t);//フォルダを作成して管理する場合はこちら
+	//t=1;//いまはわざと毎ステップ上書き	
 	if(output_face==0)
 	{
 		sprintf_s(filename,"flowstress_YZ%d",t);//他のファイルと同じ階層に生成するならこちら
 		if(CON->get_output_another_face()==ON)
+
 		{
 			sprintf_s(filename_n,"flowstress_XZ%d",t);
 			output_face_n=1;
@@ -6662,7 +6695,7 @@ void output_flow_stress_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 	}
 	else if(output_face==1)
 	{
-		sprintf_s(filename,"flowstress_XZ%d",t);
+//		sprintf_s(filename,"flowstress_XZ%d",t);
 		if(CON->get_output_another_face()==ON)
 		{
 			sprintf_s(filename_n,"flowstress_YZ%d",t);
@@ -6678,22 +6711,53 @@ void output_flow_stress_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 		if(flag_out_b==ON)	sprintf_s(filename_b,"flowstress_XY_backward%d",t);
 	}
 
-	ofstream fout(filename);
+
+
+	if(output_face==0)
+	{
+		sprintf_s(filename,"flowstress_YZ%d",t);//他のファイルと同じ階層に生成するならこちら
+		if(CON->get_output_another_face()==ON)
+		{
+			sprintf_s(filename_n,"flowstress_XZ%d",t);
+			output_face_n=1;
+		}
+		if(flag_out_f==ON)	sprintf_s(filename_f,"flowstress_YZ_forward%d",t);
+		if(flag_out_b==ON)	sprintf_s(filename_b,"flowstress_YZ_backward%d",t);
+	}
+	else if(output_face==1)
+	{
+//		sprintf_s(filename,"flowstress_XZ%d",t);
+		if(CON->get_output_another_face()==ON)
+		{
+			sprintf_s(filename_n,"flowstress_YZ%d",t);
+			output_face_n=0;
+		}
+		if(flag_out_f==ON)	sprintf_s(filename_f,"flowstress_XZ_forward%d",t);
+		if(flag_out_b==ON)	sprintf_s(filename_b,"flowstress_XZ_backward%d",t);
+	}
+	else if(output_face==2)
+	{
+		sprintf_s(filename,"flowstress_XY%d",t);
+		if(flag_out_f==ON)	sprintf_s(filename_f,"flowstress_XY_forward%d",t);
+		if(flag_out_b==ON)	sprintf_s(filename_b,"flowstress_XY_backward%d",t);
+	}
+
+//	ofstream fout(filename);
 	ofstream	fout_n(filename_n);
 	ofstream	fout_f(filename_f);
 	ofstream	fout_b(filename_b);
-	if(!fout)
+/*	if(!fout)
 	{
 		cout << "cannot open" << filename << endl;
 		exit(EXIT_FAILURE);
-	}
+	}*/
 
 	for(int i=0;i<particle_number;i++)
 	{
 		if(PART[i].type==FLUID)
 		{
-			if(PART[i].r[output_face]<cross_section+0.5*le && PART[i].r[output_face]>cross_section-0.5*le)	
-			//if(PART[i].r[A_Y]<0.006+0.5*le && PART[i].r[A_Y]>0.006-0.5*le)	
+/*			if(PART[i].r[output_face]<cross_section+le && PART[i].r[output_face]>cross_section-le)	
+			//if(PART[i].r[A_Y]<0.006+le && PART[i].r[A_Y]>0.006-le)	
 			{
 				double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
 				double y=PART[i].r[A_Y]*1.0E+05;
@@ -6701,12 +6765,12 @@ void output_flow_stress_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 				double P=PART[i].sigma;
 				fout << P << "\t" << x << "\t" << y << "\t" << z << endl;
 				n++;
-			}
+			}*/
 
 			if(CON->get_output_another_face()==ON)
 			{
-				if(PART[i].r[output_face_n]<cross_section+0.5*le && PART[i].r[output_face_n]>cross_section-0.5*le)	
-				//if(PART[i].r[A_Y]<0.006+0.5*le && PART[i].r[A_Y]>0.006-0.5*le)	
+				if(PART[i].r[output_face_n]<cross_section+le && PART[i].r[output_face_n]>cross_section-le)	
+				//if(PART[i].r[A_Y]<0.006+le && PART[i].r[A_Y]>0.006-le)	
 				{
 					double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
 					double y=PART[i].r[A_Y]*1.0E+05;
@@ -6719,8 +6783,8 @@ void output_flow_stress_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 
 			if(flag_out_f==ON)
 			{
-				if(PART[i].r[output_face]<cross_section+shold_R+0.5*le && PART[i].r[output_face]>cross_section+shold_R-0.5*le)	
-				//if(PART[i].r[A_Y]<0.006+0.5*le && PART[i].r[A_Y]>0.006-0.5*le)	
+				if(PART[i].r[output_face]<cross_section+shold_R+le && PART[i].r[output_face]>cross_section+shold_R-le)	
+				//if(PART[i].r[A_Y]<0.006+le && PART[i].r[A_Y]>0.006-le)	
 				{
 					double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
 					double y=PART[i].r[A_Y]*1.0E+05;
@@ -6733,8 +6797,8 @@ void output_flow_stress_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 
 			if(flag_out_b==ON)
 			{
-				if(PART[i].r[output_face]<cross_section-shold_R+0.5*le && PART[i].r[output_face]>cross_section-shold_R-0.5*le)	
-				//if(PART[i].r[A_Y]<0.006+0.5*le && PART[i].r[A_Y]>0.006-0.5*le)	
+				if(PART[i].r[output_face]<cross_section-shold_R+le && PART[i].r[output_face]>cross_section-shold_R-le)	
+				//if(PART[i].r[A_Y]<0.006+le && PART[i].r[A_Y]>0.006-le)	
 				{
 					double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
 					double y=PART[i].r[A_Y]*1.0E+05;
@@ -6746,7 +6810,7 @@ void output_flow_stress_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 			}
 		}
 	}
-	fout.close();
+//	fout.close();
 	fout_n.close();
 	fout_b.close();
 	fout_f.close();
@@ -6762,7 +6826,7 @@ void output_flow_stress_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 	}
 	else if(output_face==1)
 	{
-		sprintf_s(filename,"flowstress_XZ%d.fld",t);
+//		sprintf_s(filename,"flowstress_XZ%d.fld",t);
 		if(CON->get_output_another_face()==ON)	sprintf_s(filename_n,"flowstress_YZ%d.fld",t);
 		if(flag_out_f==ON)	sprintf_s(filename_f,"flowstress_XZ_forward%d.fld",t);
 		if(flag_out_b==ON)	sprintf_s(filename_b,"flowstress_XZ_backward%d.fld",t);
@@ -6774,11 +6838,11 @@ void output_flow_stress_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 		if(flag_out_b==ON)	sprintf_s(filename_b,"flowstress_XY_backward%d.fld",t);
 	}
 
-	ofstream fout2(filename);
+//	ofstream fout2(filename);
 	ofstream fout_n2(filename_n);
 	ofstream fout_f2(filename_f);
 	ofstream fout_b2(filename_b);
-	if(!fout2)
+/*	if(!fout2)
 	{
 		cout << "cannot open" << filename << endl;
 		exit(EXIT_FAILURE);
@@ -6818,7 +6882,7 @@ void output_flow_stress_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 		fout2 << "coord    2 file=flowstress_XY" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
 		fout2 << "coord    3 file=flowstress_XY" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
 	}
-	fout2.close();
+	fout2.close();*/
 
 	///////////////////粘性分布出力_他断面
 	if(CON->get_output_another_face()==ON)
@@ -6969,7 +7033,7 @@ void physical_quantity_movie_AVS(mpsconfig *CON,int t,vector<mpsparticle> &PART,
 	{
 		if(PART[i].type==FLUID)
 		{
-			if(PART[i].r[A_X]<cross_section+0.5*le&&PART[i].r[A_X]>cross_section-0.5*le)
+			if(PART[i].r[A_X]<cross_section+le&&PART[i].r[A_X]>cross_section-le)
 			{
 				input[i]=ON;
 				n++;//3次元の場合、内部流体は表示しない
@@ -6978,7 +7042,7 @@ void physical_quantity_movie_AVS(mpsconfig *CON,int t,vector<mpsparticle> &PART,
 			{
 				input[i]=OFF;
 			}
-			if(PART[i].r[A_Y]<cross_section+0.5*le&&PART[i].r[A_Y]>cross_section-0.5*le)
+			if(PART[i].r[A_Y]<cross_section+le&&PART[i].r[A_Y]>cross_section-le)
 			{
 				input2[i]=ON;
 				n2++;
