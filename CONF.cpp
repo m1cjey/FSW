@@ -296,6 +296,7 @@ mpsconfig::mpsconfig()
 	speed_plot_particle=2;	//速度をﾌﾟﾛｯﾄする粒子の種類 1=すべて 2=fluid 3=壁
 	speedtimes=1e-3;//2e-2;//1e-2;//1e-3;		//速度ﾌﾟﾛｯﾄ時の、座標に対する速度の倍率
 	speed_face=1;			//3D解析時のspeed.datの出力面 0=YZ平面 1=XZ	2=XY	//粘性、温度分布の出力面を兼ね備えている
+	speed_face2=1;			//3D解析時のspeed.datの出力面 0=YZ平面 1=XZ	2=XY	//粘性、温度分布の出力面を兼ね備えている
 	speed_face_p=0.0;//-1.0e-3;//0.006;//0.0;		//3D解析時のspeed.datの出力面の座標
 	ax_sym_modify=OFF;		//3D時のspeed.datに関して、軸対称による出力修正を行うか否か　1=ON 0=OF
 	flat_speed_plot=OFF;	//OFF//水平方向の速度(XY面)をﾌﾟﾛｯﾄするかしないか1=ON 0=OFF		//speed_eachにXY平面の出力を付け加えたため不要かも

@@ -6628,16 +6628,12 @@ void output_flow_stress_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 {
 	int flag_out_f=OFF;
 	int flag_out_b=OFF;
-	char filename[30];
-	char filename_n[30];
-	char filename_f[30];
-	char filename_b[30];
 	int n=0,nn=0,nf=0,nb=0;
 
 	double le=CON->get_distancebp();
 	double cross_section=CON->get_speed_face_p();
 	int output_face=CON->get_speed_face();
-	int output_face_n=0;
+	int output_face2=CON->get_speed_face2();
 
 	double shold_R=4.25*1e-3;
 	if(CON->get_tool_angle()>0)	
@@ -6679,28 +6675,24 @@ void output_flow_stress_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 			if(CON->get_output_backward()==ON)	flag_out_b=ON;
 	}			*/
 
-
 	//t=1;//いまはわざと毎ステップ上書き	
+
+	char filename[30];
+	char filename_f[30];
+	char filename_b[30];
+	char filename2[30];
+	char filename2_f[30];
+	char filename2_b[30];
+
 	if(output_face==0)
 	{
 		sprintf_s(filename,"flowstress_YZ%d",t);//他のファイルと同じ階層に生成するならこちら
-		if(CON->get_output_another_face()==ON)
-
-		{
-			sprintf_s(filename_n,"flowstress_XZ%d",t);
-			output_face_n=1;
-		}
 		if(flag_out_f==ON)	sprintf_s(filename_f,"flowstress_YZ_forward%d",t);
 		if(flag_out_b==ON)	sprintf_s(filename_b,"flowstress_YZ_backward%d",t);
 	}
 	else if(output_face==1)
 	{
-//		sprintf_s(filename,"flowstress_XZ%d",t);
-		if(CON->get_output_another_face()==ON)
-		{
-			sprintf_s(filename_n,"flowstress_YZ%d",t);
-			output_face_n=0;
-		}
+		sprintf_s(filename,"flowstress_XZ%d",t);
 		if(flag_out_f==ON)	sprintf_s(filename_f,"flowstress_XZ_forward%d",t);
 		if(flag_out_b==ON)	sprintf_s(filename_b,"flowstress_XZ_backward%d",t);
 	}
@@ -6711,39 +6703,29 @@ void output_flow_stress_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 		if(flag_out_b==ON)	sprintf_s(filename_b,"flowstress_XY_backward%d",t);
 	}
 
+	if(output_face2==0)
+	{
+		sprintf_s(filename2,"flowstress_YZ%d",t);//他のファイルと同じ階層に生成するならこちら
+		if(flag_out_f==ON)	sprintf_s(filename2_f,"flowstress_YZ_forward%d",t);
+		if(flag_out_b==ON)	sprintf_s(filename2_b,"flowstress_YZ_backward%d",t);
+	}
+	else if(output_face2==1)
+	{
+		sprintf_s(filename2,"flowstress_XZ%d",t);
+		if(flag_out_f==ON)	sprintf_s(filename2_f,"flowstress_XZ_forward%d",t);
+		if(flag_out_b==ON)	sprintf_s(filename2_b,"flowstress_XZ_backward%d",t);
+	}
+	else if(output_face2==2)
+	{
+		sprintf_s(filename2,"flowstress_XY%d",t);
+		if(flag_out_f==ON)	sprintf_s(filename2_f,"flowstress_XY_forward%d",t);
+		if(flag_out_b==ON)	sprintf_s(filename2_b,"flowstress_XY_backward%d",t);
+	}
 
 
-	if(output_face==0)
-	{
-		sprintf_s(filename,"flowstress_YZ%d",t);//他のファイルと同じ階層に生成するならこちら
-		if(CON->get_output_another_face()==ON)
-		{
-			sprintf_s(filename_n,"flowstress_XZ%d",t);
-			output_face_n=1;
-		}
-		if(flag_out_f==ON)	sprintf_s(filename_f,"flowstress_YZ_forward%d",t);
-		if(flag_out_b==ON)	sprintf_s(filename_b,"flowstress_YZ_backward%d",t);
-	}
-	else if(output_face==1)
-	{
-//		sprintf_s(filename,"flowstress_XZ%d",t);
-		if(CON->get_output_another_face()==ON)
-		{
-			sprintf_s(filename_n,"flowstress_YZ%d",t);
-			output_face_n=0;
-		}
-		if(flag_out_f==ON)	sprintf_s(filename_f,"flowstress_XZ_forward%d",t);
-		if(flag_out_b==ON)	sprintf_s(filename_b,"flowstress_XZ_backward%d",t);
-	}
-	else if(output_face==2)
-	{
-		sprintf_s(filename,"flowstress_XY%d",t);
-		if(flag_out_f==ON)	sprintf_s(filename_f,"flowstress_XY_forward%d",t);
-		if(flag_out_b==ON)	sprintf_s(filename_b,"flowstress_XY_backward%d",t);
-	}
 
 //	ofstream fout(filename);
-	ofstream	fout_n(filename_n);
+	ofstream	fout(filename);
 	ofstream	fout_f(filename_f);
 	ofstream	fout_b(filename_b);
 /*	if(!fout)
@@ -6769,14 +6751,14 @@ void output_flow_stress_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 
 			if(CON->get_output_another_face()==ON)
 			{
-				if(PART[i].r[output_face_n]<cross_section+le && PART[i].r[output_face_n]>cross_section-le)	
+				if(PART[i].r[output_face2]<cross_section+le && PART[i].r[output_face2]>cross_section-le)	
 				//if(PART[i].r[A_Y]<0.006+le && PART[i].r[A_Y]>0.006-le)	
 				{
 					double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
 					double y=PART[i].r[A_Y]*1.0E+05;
 					double z=PART[i].r[A_Z]*1.0E+05;
 					double P=PART[i].sigma;
-					fout_n << P << "\t" << x << "\t" << y << "\t" << z << endl;
+					fout << P << "\t" << x << "\t" << y << "\t" << z << endl;
 					nn++;
 				}
 			}
@@ -6811,7 +6793,7 @@ void output_flow_stress_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 		}
 	}
 //	fout.close();
-	fout_n.close();
+	fout.close();
 	fout_b.close();
 	fout_f.close();
 
@@ -6839,7 +6821,7 @@ void output_flow_stress_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 	}
 
 //	ofstream fout2(filename);
-	ofstream fout_n2(filename_n);
+	ofstream fout_n2(filename);
 	ofstream fout_f2(filename_f);
 	ofstream fout_b2(filename_b);
 /*	if(!fout2)
@@ -6899,14 +6881,335 @@ void output_flow_stress_avs(mpsconfig *CON,vector<mpsparticle> &PART,int t,int p
 		//fout2n << "coord    1 file=./pressure" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//フォルダを作成して管理する場合はこちら
 		//fout2n << "coord    2 file=./pressure" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//フォルダを作成して管理する場合はこちら
 		//fout2n << "coord    3 file=./pressure" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//フォルダを作成して管理する場合はこちら
-		if(output_face_n==0)
+		if(output_face==0)
 		{
 			fout_n2 << "variable 1 file=flowstress_YZ" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
 			fout_n2 << "coord    1 file=flowstress_YZ" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
 			fout_n2 << "coord    2 file=flowstress_YZ" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
 			fout_n2 << "coord    3 file=flowstress_YZ" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
 		}
-		if(output_face_n==1)
+		if(output_face==1)
+		{
+			fout_n2 << "variable 1 file=flowstress_XZ" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_n2 << "coord    1 file=flowstress_XZ" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_n2 << "coord    2 file=flowstress_XZ" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_n2 << "coord    3 file=flowstress_XZ" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		}
+		fout_n2.close();
+	}
+
+	////////////////粘性分布出力_前方
+	if(flag_out_f==ON)
+	{
+		fout_f2 << "# AVS field file" << endl;
+		fout_f2 << "ndim=1" << endl;
+		fout_f2 << "dim1=" << nf <<endl;
+		fout_f2 << "nspace=3" << endl;
+		fout_f2 << "veclen=1" << endl;
+		fout_f2 << "data=float" << endl;
+		fout_f2 << "field=irregular" << endl;
+		fout_f2 << "label=flowstress" << endl << endl;
+		//fout2 << "variable 1 file=./pressure" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//フォルダを作成して管理する場合はこちら
+		//fout2 << "coord    1 file=./pressure" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//フォルダを作成して管理する場合はこちら
+		//fout2 << "coord    2 file=./pressure" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//フォルダを作成して管理する場合はこちら
+		//fout2 << "coord    3 file=./pressure" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//フォルダを作成して管理する場合はこちら
+		if(output_face==0)
+		{
+			fout_f2 << "variable 1 file=flowstress_YZ_forward" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_f2 << "coord    1 file=flowstress_YZ_forward" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_f2 << "coord    2 file=flowstress_YZ_forward" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_f2 << "coord    3 file=flowstress_YZ_forward" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		}
+		else if(output_face==1)
+		{
+			fout_f2 << "variable 1 file=flowstress_XZ_forward" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_f2 << "coord    1 file=flowstress_XZ_forward" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_f2 << "coord    2 file=flowstress_XZ_forward" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_f2 << "coord    3 file=flowstress_XZ_forward" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		}
+		else if(output_face==2)
+		{
+			fout_f2 << "variable 1 file=flowstress_XY_forward" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_f2 << "coord    1 file=flowstress_XY_forward" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_f2 << "coord    2 file=flowstress_XY_forward" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_f2 << "coord    3 file=flowstress_XY_forward" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		}
+		fout_f2.close();
+	}
+
+	////////////温度分布出力＿後方
+	if(flag_out_b==ON)
+	{
+		fout_b2 << "# AVS field file" << endl;
+		fout_b2 << "ndim=1" << endl;
+		fout_b2 << "dim1=" << nb <<endl;
+		fout_b2 << "nspace=3" << endl;
+		fout_b2 << "veclen=1" << endl;
+		fout_b2 << "data=float" << endl;
+		fout_b2 << "field=irregular" << endl;
+		fout_b2 << "label=flowstress" << endl << endl;
+		//fout2 << "variable 1 file=./pressure" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//フォルダを作成して管理する場合はこちら
+		//fout2 << "coord    1 file=./pressure" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//フォルダを作成して管理する場合はこちら
+		//fout2 << "coord    2 file=./pressure" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//フォルダを作成して管理する場合はこちら
+		//fout2 << "coord    3 file=./pressure" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//フォルダを作成して管理する場合はこちら
+		if(output_face==0)
+		{
+			fout_b2 << "variable 1 file=flowstress_YZ_backward" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_b2 << "coord    1 file=flowstress_YZ_backward" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_b2 << "coord    2 file=flowstress_YZ_backward" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_b2 << "coord    3 file=flowstress_YZ_backward" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		}
+		else if(output_face==1)
+		{
+			fout_b2 << "variable 1 file=flowstress_XZ_backward" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_b2 << "coord    1 file=flowstress_XZ_backward" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_b2 << "coord    2 file=flowstress_XZ_backward" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_b2 << "coord    3 file=flowstress_XZ_backward" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		}
+		else if(output_face==2)
+		{
+			fout_b2 << "variable 1 file=flowstress_XY_backward" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_b2 << "coord    1 file=flowstress_XY_backward" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_b2 << "coord    2 file=flowstress_XY_backward" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_b2 << "coord    3 file=flowstress_XY_backward" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		}
+		fout_b2.close();
+	}
+}
+
+void output_flow_stress_avs2(mpsconfig *CON,vector<mpsparticle> &PART,int t,int particle_number,int fluid_number)
+{
+	double le=CON->get_distancebp();
+	double r_face=CON->get_speed_face_p();
+	int face=CON->get_speed_face();
+	int face2=CON->get_speed_face2();
+
+	double shold_R=4.25*1e-3;
+	if(CON->get_tool_angle()>0)	
+	{
+		double	angle=CON->get_tool_angle();
+		shold_R*=cos(angle);
+	}
+
+	//出力面の移動
+	if(CON->get_process_type()==1||CON->get_process_type()==2)
+	{
+		double dt=CON->get_dt();
+		int dwell_step=CON->get_dwelling_time()/dt;
+		int change_step=CON->get_change_step();
+		double speed2=CON->get_move_speed2();
+
+		if(t>dwell_step+change_step)	r_face+=speed2*dt*(t-dwell_step-change_step);
+	}
+
+	char filename[30];
+	char filename2[30];
+
+	if(output_face==0)
+	{
+		sprintf_s(filename,"flowstress_YZ%d",t);//他のファイルと同じ階層に生成するならこちら
+		if(flag_out_f==ON)	sprintf_s(filename_f,"flowstress_YZ_forward%d",t);
+		if(flag_out_b==ON)	sprintf_s(filename_b,"flowstress_YZ_backward%d",t);
+	}
+	else if(output_face==1)
+	{
+		sprintf_s(filename,"flowstress_XZ%d",t);
+		if(flag_out_f==ON)	sprintf_s(filename_f,"flowstress_XZ_forward%d",t);
+		if(flag_out_b==ON)	sprintf_s(filename_b,"flowstress_XZ_backward%d",t);
+	}
+	else if(output_face==2)
+	{
+		sprintf_s(filename,"flowstress_XY%d",t);
+		if(flag_out_f==ON)	sprintf_s(filename_f,"flowstress_XY_forward%d",t);
+		if(flag_out_b==ON)	sprintf_s(filename_b,"flowstress_XY_backward%d",t);
+	}
+
+	if(output_face2==0)
+	{
+		sprintf_s(filename2,"flowstress_YZ%d",t);//他のファイルと同じ階層に生成するならこちら
+		if(flag_out_f==ON)	sprintf_s(filename2_f,"flowstress_YZ_forward%d",t);
+		if(flag_out_b==ON)	sprintf_s(filename2_b,"flowstress_YZ_backward%d",t);
+	}
+	else if(output_face2==1)
+	{
+		sprintf_s(filename2,"flowstress_XZ%d",t);
+		if(flag_out_f==ON)	sprintf_s(filename2_f,"flowstress_XZ_forward%d",t);
+		if(flag_out_b==ON)	sprintf_s(filename2_b,"flowstress_XZ_backward%d",t);
+	}
+	else if(output_face2==2)
+	{
+		sprintf_s(filename2,"flowstress_XY%d",t);
+		if(flag_out_f==ON)	sprintf_s(filename2_f,"flowstress_XY_forward%d",t);
+		if(flag_out_b==ON)	sprintf_s(filename2_b,"flowstress_XY_backward%d",t);
+	}
+
+
+
+//	ofstream fout(filename);
+	ofstream	fout(filename);
+	ofstream	fout_f(filename_f);
+	ofstream	fout_b(filename_b);
+/*	if(!fout)
+	{
+		cout << "cannot open" << filename << endl;
+		exit(EXIT_FAILURE);
+	}*/
+
+	for(int i=0;i<particle_number;i++)
+	{
+		if(PART[i].type==FLUID)
+		{
+/*			if(PART[i].r[output_face]<cross_section+le && PART[i].r[output_face]>cross_section-le)	
+			//if(PART[i].r[A_Y]<0.006+le && PART[i].r[A_Y]>0.006-le)	
+			{
+				double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
+				double y=PART[i].r[A_Y]*1.0E+05;
+				double z=PART[i].r[A_Z]*1.0E+05;
+				double P=PART[i].sigma;
+				fout << P << "\t" << x << "\t" << y << "\t" << z << endl;
+				n++;
+			}*/
+
+			if(CON->get_output_another_face()==ON)
+			{
+				if(PART[i].r[output_face2]<cross_section+le && PART[i].r[output_face2]>cross_section-le)	
+				//if(PART[i].r[A_Y]<0.006+le && PART[i].r[A_Y]>0.006-le)	
+				{
+					double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
+					double y=PART[i].r[A_Y]*1.0E+05;
+					double z=PART[i].r[A_Z]*1.0E+05;
+					double P=PART[i].sigma;
+					fout << P << "\t" << x << "\t" << y << "\t" << z << endl;
+					nn++;
+				}
+			}
+
+			if(flag_out_f==ON)
+			{
+				if(PART[i].r[output_face]<cross_section+shold_R+le && PART[i].r[output_face]>cross_section+shold_R-le)	
+				//if(PART[i].r[A_Y]<0.006+le && PART[i].r[A_Y]>0.006-le)	
+				{
+					double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
+					double y=PART[i].r[A_Y]*1.0E+05;
+					double z=PART[i].r[A_Z]*1.0E+05;
+					double P=PART[i].sigma;
+					fout_f << P << "\t" << x << "\t" << y << "\t" << z << endl;
+					nf++;
+				}
+			}
+
+			if(flag_out_b==ON)
+			{
+				if(PART[i].r[output_face]<cross_section-shold_R+le && PART[i].r[output_face]>cross_section-shold_R-le)	
+				//if(PART[i].r[A_Y]<0.006+le && PART[i].r[A_Y]>0.006-le)	
+				{
+					double x=PART[i].r[A_X]*1.0E+05;	//rは非常に小さい値なので10^5倍しておく
+					double y=PART[i].r[A_Y]*1.0E+05;
+					double z=PART[i].r[A_Z]*1.0E+05;
+					double P=PART[i].sigma;
+					fout_b << P << "\t" << x << "\t" << y << "\t" << z << endl;
+					nb++;
+				}
+			}
+		}
+	}
+//	fout.close();
+	fout.close();
+	fout_b.close();
+	fout_f.close();
+
+
+	//sprintf_s(filename,"pressure/pressure%d.fld",t);//フォルダを作成して管理する場合はこちら
+	if(output_face==0)
+	{
+		sprintf_s(filename,"flowstress_YZ%d.fld",t);//他のファイルと同じ階層に生成するならこちら
+		if(CON->get_output_another_face()==ON)	sprintf_s(filename_n,"flowstress_XZ%d.fld",t);
+		if(flag_out_f==ON)	sprintf_s(filename_f,"flowstress_YZ_forward%d.fld",t);
+		if(flag_out_b==ON)	sprintf_s(filename_b,"flowstress_YZ_backward%d.fld",t);
+	}
+	else if(output_face==1)
+	{
+//		sprintf_s(filename,"flowstress_XZ%d.fld",t);
+		if(CON->get_output_another_face()==ON)	sprintf_s(filename_n,"flowstress_YZ%d.fld",t);
+		if(flag_out_f==ON)	sprintf_s(filename_f,"flowstress_XZ_forward%d.fld",t);
+		if(flag_out_b==ON)	sprintf_s(filename_b,"flowstress_XZ_backward%d.fld",t);
+	}
+	else if(output_face==2)
+	{
+		sprintf_s(filename,"flowstress_XY%d.fld",t);
+		if(flag_out_f==ON)	sprintf_s(filename_f,"flowstress_XY_forward%d.fld",t);
+		if(flag_out_b==ON)	sprintf_s(filename_b,"flowstress_XY_backward%d.fld",t);
+	}
+
+//	ofstream fout2(filename);
+	ofstream fout_n2(filename);
+	ofstream fout_f2(filename_f);
+	ofstream fout_b2(filename_b);
+/*	if(!fout2)
+	{
+		cout << "cannot open" << filename << endl;
+		exit(EXIT_FAILURE);
+	}
+
+	fout2 << "# AVS field file" << endl;
+	fout2 << "ndim=1" << endl;
+	fout2 << "dim1=" << n <<endl;
+	fout2 << "nspace=3" << endl;
+	fout2 << "veclen=1" << endl;
+	fout2 << "data=float" << endl;
+	fout2 << "field=irregular" << endl;
+	fout2 << "label=flowstress" << endl << endl;
+	//fout2 << "variable 1 file=./pressure" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//フォルダを作成して管理する場合はこちら
+	//fout2 << "coord    1 file=./pressure" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//フォルダを作成して管理する場合はこちら
+	//fout2 << "coord    2 file=./pressure" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//フォルダを作成して管理する場合はこちら
+	//fout2 << "coord    3 file=./pressure" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//フォルダを作成して管理する場合はこちら
+
+	if(output_face==0)
+	{
+		fout2 << "variable 1 file=flowstress_YZ" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		fout2 << "coord    1 file=flowstress_YZ" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		fout2 << "coord    2 file=flowstress_YZ" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		fout2 << "coord    3 file=flowstress_YZ" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+	}
+	if(output_face==1)
+	{
+		fout2 << "variable 1 file=flowstress_XZ" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		fout2 << "coord    1 file=flowstress_XZ" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		fout2 << "coord    2 file=flowstress_XZ" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		fout2 << "coord    3 file=flowstress_XZ" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+	}
+	if(output_face==2)
+	{
+		fout2 << "variable 1 file=flowstress_XY" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		fout2 << "coord    1 file=flowstress_XY" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		fout2 << "coord    2 file=flowstress_XY" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		fout2 << "coord    3 file=flowstress_XY" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+	}
+	fout2.close();*/
+
+	///////////////////粘性分布出力_他断面
+	if(CON->get_output_another_face()==ON)
+	{
+		fout_n2 << "# AVS field file" << endl;
+		fout_n2 << "ndim=1" << endl;
+		fout_n2 << "dim1=" << nn <<endl;
+		fout_n2 << "nspace=3" << endl;
+		fout_n2 << "veclen=1" << endl;
+		fout_n2 << "data=float" << endl;
+		fout_n2 << "field=irregular" << endl;
+		fout_n2 << "label=flowstress" << endl << endl;
+		//fout2n << "variable 1 file=./pressure" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//フォルダを作成して管理する場合はこちら
+		//fout2n << "coord    1 file=./pressure" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//フォルダを作成して管理する場合はこちら
+		//fout2n << "coord    2 file=./pressure" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//フォルダを作成して管理する場合はこちら
+		//fout2n << "coord    3 file=./pressure" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//フォルダを作成して管理する場合はこちら
+		if(output_face==0)
+		{
+			fout_n2 << "variable 1 file=flowstress_YZ" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_n2 << "coord    1 file=flowstress_YZ" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_n2 << "coord    2 file=flowstress_YZ" << t << " " << "filetype=ascii offset=2 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+			fout_n2 << "coord    3 file=flowstress_YZ" << t << " " << "filetype=ascii offset=3 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
+		}
+		if(output_face==1)
 		{
 			fout_n2 << "variable 1 file=flowstress_XZ" << t << " " << "filetype=ascii offset=0 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら
 			fout_n2 << "coord    1 file=flowstress_XZ" << t << " " << "filetype=ascii offset=1 stride=4" << endl;//他のファイルと同じ階層に生成するならこちら

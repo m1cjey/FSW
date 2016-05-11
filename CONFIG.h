@@ -264,6 +264,7 @@ class mpsconfig
 	int    speed_plot_particle;	//速度をﾌﾟﾛｯﾄする粒子の種類 1=すべて 2=fluid
 	double speedtimes;			//速度ﾌﾟﾛｯﾄ時の、座標に対する速度の倍率
 	int    speed_face;			//speed.datの出力面 0=YZ平面 1=XZ 2=XY
+	int    speed_face2;			//speed.datの出力面 0=YZ平面 1=XZ 2=XY
 	double speed_face_p;		//3D解析時のspeed.datの出力面の座標
 	int    ax_sym_modify;		//3D時のspeed.datに関して、軸対称による出力修正を行うか否か　1=ON 0=OF
 	int    flat_speed_plot;		//水平方向の速度をﾌﾟﾛｯﾄするかしないか
@@ -530,6 +531,7 @@ class mpsconfig
 	int    get_speed_plot_particle(){return speed_plot_particle;}
 	double get_speedtimes(){return speedtimes;}
 	int    get_speed_face() {return speed_face;}
+	int    get_speed_face2() {return speed_face2;}
 	double get_speed_face_p(){return speed_face_p;}
 	int    get_ax_sym_modify(){return ax_sym_modify;}
 	int    get_flat_speed_plot(){return flat_speed_plot;}
