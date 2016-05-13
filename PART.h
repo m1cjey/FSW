@@ -9,6 +9,7 @@ public:
 	int id;
 	int firstID;
 	double r[DIMENTION];
+	double r0[DIMENTION];
 	double u[DIMENTION];
 	double n[DIMENTION];	//単位法線ベクトル
 	double old_A[DIMENTION];
