@@ -92,7 +92,7 @@ mpsconfig::mpsconfig()
 	wlength=2;
 	height=-0.004;//-0.004;//0.06;//0.102;//0.18;//0.005;    
 	tool_angle=0;//FSWにおいて、ツールを傾ける角度(弧度)
-	tool_type=1;//FSWにおける、ツール形状0:デフォルト(円柱)　1:円錐 2:円柱裏表
+	tool_type=0;//FSWにおける、ツール形状0:デフォルト(円柱)　1:円錐 2:円柱裏表
 	process_type=2;//FSWにおける過程選択		//0:plunge 1:traverse 2:plung→traverse
 	dwelling_time=0.0;//1.0;
 	change_step=8000;

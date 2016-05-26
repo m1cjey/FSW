@@ -970,7 +970,7 @@ void set_initial_placement_using_MD(mpsconfig *CON,int *particle_number)
 		if(CON->get_tool_type()==2) height=3*1e-3+B*le;//表裏ツールの場合、ツールの長さ*2が流体領域の厚みと同じにならないといけない
 
 		double shold_height=10*B*le;
-		double rpm=500;//ツール回転速度
+		double rpm=2500;//ツール回転速度
 		double rps=rpm/60;
 		double w=rps*2*PI;		//角速度
 		double U=CON->get_move_speed();//プローブの移動速度[m/sec]		
