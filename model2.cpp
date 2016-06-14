@@ -970,13 +970,13 @@ void set_initial_placement_using_MD(mpsconfig *CON,int *particle_number)
 		if(CON->get_tool_type()==2) height=3*1e-3+B*le;//表裏ツールの場合、ツールの長さ*2が流体領域の厚みと同じにならないといけない
 
 		double shold_height=10*B*le;
-		double rpm=2500;//ツール回転速度
+		double rpm=500;//ツール回転速度
 		double rps=rpm/60;
 		double w=rps*2*PI;		//角速度
 		double U=CON->get_move_speed();//プローブの移動速度[m/sec]		
 		double pich=0.7e-3;		//プローブのねじのピッチ0.7[mm]
 		double T=CON->get_roomT();	//初期温度
-		double vol=get_volume(CON);				//粒子の体積
+		double vol=get_volume(CON);			//粒子の体積
 		double h;								//エンタルピー
 		double wallmass=vol*CON->get_wall_density();	//壁粒子の質量
 		double wall_h=T*wallmass*CON->get_wall_Cp();//壁粒子のエンタルピー
